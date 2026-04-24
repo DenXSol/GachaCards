@@ -27,6 +27,14 @@ module.exports = async function handler(req, res) {
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json({ message: 'Avatar updated!' });
       }
+
+      if (action === 'update_profile') {
+        const { twitter_handle, discord_id, wallet_address } = req.body;
+        const { error } = await supabase.from('profiles')
+          .update({ twitter_handle, discord_id, wallet_address }).eq('id', user.id);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ message: 'Profile updated!' });
+      }
       return res.status(400).json({ error: 'Invalid action.' });
     }
     const { username } = req.query;
