@@ -6,6 +6,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+const MAX_ACCOUNTS_PER_IP = 3;
+
 function hashIP(ip) {
   return crypto.createHash('sha256').update(ip + 'gachacards_salt').digest('hex');
 }
@@ -24,19 +26,25 @@ module.exports = async function handler(req, res) {
       const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
       const ip_hash = hashIP(ip);
 
-      const { data: existingIP } = await supabase
-        .from('ip_registry').select('user_id').eq('ip_hash', ip_hash).maybeSingle();
-      if (existingIP) return res.status(400).json({ error: 'An account already exists from this network.' });
+      // Check how many accounts already exist from this IP
+      const { data: existingIPs } = await supabase
+        .from('ip_registry').select('user_id').eq('ip_hash', ip_hash);
+      if (existingIPs && existingIPs.length >= MAX_ACCOUNTS_PER_IP) {
+        return res.status(400).json({ error: `Maximum ${MAX_ACCOUNTS_PER_IP} accounts allowed per network.` });
+      }
 
+      // Check username not taken
       const { data: existingUsername } = await supabase
         .from('profiles').select('id').eq('username', username).maybeSingle();
       if (existingUsername) return res.status(400).json({ error: 'Username already taken.' });
 
+      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
       if (authError) return res.status(400).json({ error: authError.message });
 
       const userId = authData.user.id;
 
+      // Create profile
       const { error: profileError } = await supabase.from('profiles').insert({
         id: userId, username,
         discord_id: discord_id || null,
@@ -46,10 +54,11 @@ module.exports = async function handler(req, res) {
       });
       if (profileError) return res.status(400).json({ error: profileError.message });
 
+      // Register IP (allow multiple rows per IP now)
       await supabase.from('ip_registry').insert({ ip_hash, user_id: userId });
 
       return res.status(200).json({
-        message: 'Account created! Check your email to confirm.',
+        message: 'Account created!',
         user: { id: userId, username, email },
       });
     }
