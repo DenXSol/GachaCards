@@ -14,8 +14,22 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // GET — leaderboard
+    // GET — leaderboard or voters for a card
     if (req.method === 'GET') {
+      const { card_id } = req.query;
+
+      // Get voters for a specific card
+      if (card_id) {
+        const { data, error } = await supabase
+          .from('votes')
+          .select('user_id, voted_at, profiles(username, avatar_card_image)')
+          .eq('card_id', card_id)
+          .order('voted_at', { ascending: false });
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ voters: data });
+      }
+
+      // Leaderboard
       const { data, error } = await supabase
         .from('card_totals')
         .select('*')
