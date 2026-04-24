@@ -473,9 +473,24 @@ async function doRegister(){
     });
     const data=await res.json();
     if(!res.ok){errEl.textContent=data.error;return;}
-    errEl.style.color='var(--accent)';
-    errEl.textContent='Account created! Check your email to confirm, then log in.';
-    setTimeout(()=>switchTab('login'),2500);
+
+    if(data.autoLogin && data.session){
+      // Logged in automatically — same flow as doLogin
+      currentUser=data.user;
+      currentSession=data.session.access_token;
+      localStorage.setItem('gc_user',JSON.stringify(data.user));
+      localStorage.setItem('gc_session',currentSession);
+      closeAuthModal();
+      updateAuthUI();
+      await loadMyVotes();
+      showToast('Welcome to GachaCards, '+data.user.username+'! 🎴');
+      renderLeaderboard();
+    } else {
+      // Fallback — ask to log in manually
+      errEl.style.color='var(--accent)';
+      errEl.textContent='Account created! Please log in.';
+      setTimeout(()=>switchTab('login'),1500);
+    }
   }catch(e){errEl.textContent='Network error. Try again.';}
   finally{btn.disabled=false;btn.textContent='Create Account';}
 }
