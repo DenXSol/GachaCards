@@ -171,6 +171,23 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .auth-close:hover{color:var(--text);}
 
 /* MISC */
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;color:var(--accent);flex-shrink:0;overflow:hidden;cursor:pointer;position:relative;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.profile-avatar-wrap{position:relative;flex-shrink:0;}
+.profile-avatar-wrap:hover .avatar-edit-hint{opacity:1;}
+.avatar-edit-hint{position:absolute;inset:0;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;opacity:0;transition:opacity 0.15s;cursor:pointer;}
+.avatar-picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;align-items:center;justify-content:center;padding:1rem;}
+.avatar-picker-overlay.open{display:flex;}
+.avatar-picker-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;max-width:700px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;position:relative;}
+.avatar-picker-title{font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.06em;margin-bottom:4px;}
+.avatar-picker-sub{font-size:12px;color:var(--muted2);margin-bottom:1.2rem;}
+.avatar-picker-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.avatar-picker-close:hover{color:var(--text);}
+.avatar-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:1rem;}
+.avatar-card-option{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all 0.15s;}
+.avatar-card-option:hover{border-color:var(--accent);transform:translateY(-2px);}
+.avatar-card-option img{width:100%;display:block;}
+.avatar-card-option p{font-size:10px;color:var(--muted2);padding:5px 8px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .status-msg{text-align:center;padding:4rem 0;color:var(--muted);font-size:14px;}
 .no-img-placeholder{height:130px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;padding:10px 22px;border-radius:8px;z-index:300;transition:transform 0.25s ease;pointer-events:none;white-space:nowrap;}
@@ -189,7 +206,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 <body>
 
 <header>
-  <div class="logo"><span class="logo-dot"></span>GACHA<span style="color:var(--accent)">CARDS</span></div>
+  <div class="logo"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:36px;width:auto;display:block;"/></div>
   <nav>
     <button class="active" onclick="showView('leaderboard',this)">Most Wanted</button>
     <button onclick="showView('search',this)">Search Cards</button>
@@ -270,7 +287,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 <div class="auth-overlay" id="auth-overlay" onclick="closeAuthModal(event)">
   <div class="auth-modal">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
-    <h2>GACHA<span style="color:var(--accent)">CARDS</span></h2>
+    <img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:40px;width:auto;display:block;margin-bottom:8px;"/>
     <p>Join to vote on the cards you want</p>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
@@ -292,6 +309,16 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       <button class="auth-submit" id="register-btn" onclick="doRegister()">Create Account</button>
       <div class="auth-error" id="register-error"></div>
     </div>
+  </div>
+</div>
+
+<!-- AVATAR PICKER -->
+<div class="avatar-picker-overlay" id="avatar-picker-overlay" onclick="closeAvatarPicker(event)">
+  <div class="avatar-picker-modal">
+    <button class="avatar-picker-close" onclick="closeAvatarPicker()">✕</button>
+    <div class="avatar-picker-title">CHOOSE <span style="color:var(--accent)">AVATAR</span></div>
+    <div class="avatar-picker-sub">Click a card from your wanted list to set it as your profile image</div>
+    <div class="avatar-card-grid" id="avatar-card-grid"></div>
   </div>
 </div>
 
@@ -670,6 +697,7 @@ async function renderProfile(){
     const data=await res.json();
     if(!res.ok){content.innerHTML='<div class="status-msg">Could not load profile.</div>';return;}
     const{profile,votes,votes_remaining}=data;
+    currentProfileVotes=votes||[];
     votesRemaining=votes_remaining??votesRemaining;updateVoteCounter();
     const usedSlots=10-(votes_remaining??10);
     const slots=Array.from({length:10},(_,i)=>
@@ -677,7 +705,14 @@ async function renderProfile(){
 
     content.innerHTML=`
       <div class="profile-header">
-        <div class="profile-avatar">${profile.username[0].toUpperCase()}</div>
+        <div class="profile-avatar-wrap" onclick="openAvatarPicker()">
+          <div class="profile-avatar" id="profile-avatar-el">
+            ${profile.avatar_card_image
+              ? `<img src="${profile.avatar_card_image}" alt="avatar"/>`
+              : `<span>${profile.username[0].toUpperCase()}</span>`}
+          </div>
+          <div class="avatar-edit-hint">Edit</div>
+        </div>
         <div>
           <div class="profile-username">${profile.username}</div>
           <div class="profile-meta">
@@ -709,6 +744,52 @@ async function fetchAndOpenCard(id){
     try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();card=d.data;if(card)cardCache[id]=card;}catch(e){}
   }
   if(card)openCardModal(card);
+}
+
+// ── AVATAR PICKER ─────────────────────────────────────────────────
+let currentProfileVotes = [];
+
+function openAvatarPicker(){
+  if(!currentUser)return;
+  const grid=document.getElementById('avatar-card-grid');
+  grid.innerHTML='';
+
+  if(!currentProfileVotes.length){
+    grid.innerHTML='<div class="status-msg" style="padding:2rem">Vote on cards first to use them as your avatar!</div>';
+  } else {
+    currentProfileVotes.forEach(v=>{
+      if(!v.card_image)return;
+      const el=document.createElement('div');
+      el.className='avatar-card-option';
+      el.innerHTML=`<img src="${v.card_image}" alt="${v.card_name}"/><p>${v.card_name}</p>`;
+      el.addEventListener('click',()=>setAvatar(v.card_image));
+      grid.appendChild(el);
+    });
+  }
+  document.getElementById('avatar-picker-overlay').classList.add('open');
+}
+
+function closeAvatarPicker(e){
+  if(!e||e.target===document.getElementById('avatar-picker-overlay')){
+    document.getElementById('avatar-picker-overlay').classList.remove('open');
+  }
+}
+
+async function setAvatar(imageUrl){
+  try{
+    const res=await fetch('/api/profile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:'set_avatar',avatar_card_image:imageUrl})
+    });
+    if(res.ok){
+      // Update avatar in UI immediately
+      const avatarEl=document.getElementById('profile-avatar-el');
+      if(avatarEl) avatarEl.innerHTML=`<img src="${imageUrl}" alt="avatar"/>`;
+      closeAvatarPicker();
+      showToast('✦ Profile image updated!');
+    }
+  }catch(e){showToast('Error updating avatar.');}
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
