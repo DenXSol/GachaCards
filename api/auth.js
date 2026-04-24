@@ -57,9 +57,26 @@ module.exports = async function handler(req, res) {
       // Register IP (allow multiple rows per IP now)
       await supabase.from('ip_registry').insert({ ip_hash, user_id: userId });
 
+      // Auto login after register — sign in immediately to get session
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (loginError) {
+        // Account created but auto-login failed — ask them to log in manually
+        return res.status(200).json({
+          message: 'Account created! Please log in.',
+          autoLogin: false,
+          user: { id: userId, username, email },
+        });
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles').select('*').eq('id', userId).single();
+
       return res.status(200).json({
         message: 'Account created!',
-        user: { id: userId, username, email },
+        autoLogin: true,
+        session: loginData.session,
+        user: { ...profile, email },
       });
     }
 
