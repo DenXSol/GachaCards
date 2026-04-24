@@ -201,6 +201,28 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .auth-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .auth-close:hover{color:var(--text);}
 
+/* AUTOCOMPLETE */
+.search-wrap{position:relative;flex:1;}
+.autocomplete-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:0 0 10px 10px;z-index:100;max-height:240px;overflow-y:auto;display:none;}
+.autocomplete-dropdown.open{display:block;}
+.autocomplete-item{padding:9px 16px;font-size:14px;color:var(--text);cursor:pointer;transition:background 0.1s;}
+.autocomplete-item:hover,.autocomplete-item.selected{background:var(--surface2);color:var(--accent);}
+.autocomplete-item span{color:var(--accent);}
+
+/* SETS */
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.set-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.15s,transform 0.15s;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
+.set-card:hover{border-color:var(--accent-border);transform:translateY(-2px);}
+.set-card img{height:60px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.set-card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.set-card-meta{font-size:10px;color:var(--muted2);}
+.set-back-btn{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:1.5rem;display:inline-flex;align-items:center;gap:6px;}
+.set-back-btn:hover{color:var(--text);border-color:#444;}
+.set-filter-row{display:flex;gap:8px;max-width:400px;margin-bottom:1.5rem;}
+.set-filter-row input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 14px;border-radius:8px;outline:none;}
+.set-filter-row input:focus{border-color:#333;}
+.set-filter-row input::placeholder{color:var(--muted);}
+
 /* MISC */
 .profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;color:var(--accent);flex-shrink:0;overflow:hidden;cursor:pointer;position:relative;}
 .profile-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
@@ -241,6 +263,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
   <nav>
     <button class="active" onclick="showView('leaderboard',this)">Most Wanted</button>
     <button onclick="showView('search',this)">Search Cards</button>
+    <button onclick="showView('sets',this)">Browse Sets</button>
     <button id="nav-profile" style="display:none" onclick="showView('profile',this)">My Profile</button>
     <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">🎴 Play Gacha</a>
   </nav>
@@ -280,12 +303,47 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     </div>
   </div>
   <div class="search-row">
-    <input type="text" id="search-input" placeholder="Pokémon name (e.g. Charizard)..." value="Mimikyu"/>
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Pokémon name (e.g. Charizard)..." autocomplete="off"/>
+      <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+    </div>
     <button id="search-btn">Search</button>
   </div>
   <div id="search-count" class="search-count"></div>
   <div class="search-grid" id="search-grid"></div>
   <div id="search-status" class="status-msg">Search for a Pokémon to see all their cards</div>
+</div>
+
+<!-- BROWSE SETS -->
+<div class="view" id="view-sets">
+  <div id="sets-list-view">
+    <div class="page-header">
+      <div>
+        <h1>BROWSE <span>SETS</span></h1>
+        <div class="page-sub">All Pokémon TCG sets · Newest first</div>
+      </div>
+    </div>
+    <div class="sets-grid" id="sets-grid"></div>
+    <div id="sets-status" class="status-msg">Loading sets...</div>
+  </div>
+  <div id="set-detail-view" style="display:none">
+    <button class="set-back-btn" onclick="backToSets()">← Back to Sets</button>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <img id="set-detail-logo" src="" alt="" style="height:50px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5))"/>
+        <div>
+          <h1 id="set-detail-name" style="font-family:var(--font-display);font-size:2.5rem;letter-spacing:0.06em;line-height:1;">SET <span style="color:var(--accent)">NAME</span></h1>
+          <div class="page-sub" id="set-detail-meta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="set-filter-row">
+      <input type="text" id="set-filter-input" placeholder="Filter by Pokémon name within this set..." autocomplete="off"/>
+    </div>
+    <div class="search-count" id="set-card-count"></div>
+    <div class="search-grid" id="set-cards-grid"></div>
+    <div id="set-cards-status" class="status-msg"></div>
+  </div>
 </div>
 
 <!-- PROFILE -->
@@ -542,6 +600,7 @@ function showView(name,btn){
   if(btn)btn.classList.add('active');
   if(name==='leaderboard')renderLeaderboard();
   if(name==='profile')renderProfile();
+  if(name==='sets')renderSets();
 }
 
 // ── LEADERBOARD ───────────────────────────────────────────────────
@@ -925,10 +984,268 @@ async function setAvatar(imageUrl){
   }catch(e){showToast('Error updating avatar.');}
 }
 
+// ── BROWSE SETS ───────────────────────────────────────────────────
+let allSets = [];
+let currentSetCards = [];
+let setsLoaded = false;
+
+async function renderSets() {
+  if (setsLoaded && allSets.length) { showSetsList(); return; }
+  const grid = document.getElementById('sets-grid');
+  const status = document.getElementById('sets-status');
+  grid.innerHTML = ''; status.textContent = 'Loading sets...'; status.style.display = 'block';
+
+  try {
+    const res = await fetch('/api/pokemon?path=sets&orderBy=-releaseDate&pageSize=250');
+    const data = await res.json();
+    allSets = data.data || [];
+    setsLoaded = true;
+    status.style.display = 'none';
+    renderSetsGrid(allSets);
+  } catch(e) {
+    status.textContent = 'Error loading sets. Try again.';
+  }
+}
+
+function renderSetsGrid(sets) {
+  const grid = document.getElementById('sets-grid');
+  grid.innerHTML = '';
+  sets.forEach(set => {
+    const el = document.createElement('div');
+    el.className = 'set-card';
+    el.innerHTML = `
+      ${set.images?.logo
+        ? `<div class="set-logo-wrap"><img src="${set.images.logo}" alt="${set.name}" loading="lazy"/></div>`
+        : `<div class="set-logo-wrap set-logo-placeholder">${set.name[0]}</div>`}
+      <div class="set-card-info">
+        <div class="set-card-name">${set.name}</div>
+        <div class="set-card-meta">${set.releaseDate?.slice(0,4) || ''} · ${set.total || set.printedTotal || '?'} cards</div>
+      </div>`;
+    el.addEventListener('click', () => openSet(set));
+    grid.appendChild(el);
+  });
+}
+
+function showSetsList() {
+  document.getElementById('sets-list-view').style.display = 'block';
+  document.getElementById('set-detail-view').style.display = 'none';
+}
+
+function backToSets() {
+  showSetsList();
+  currentSetCards = [];
+  document.getElementById('set-filter-input').value = '';
+}
+
+async function openSet(set) {
+  document.getElementById('sets-list-view').style.display = 'none';
+  document.getElementById('set-detail-view').style.display = 'block';
+
+  // Set header
+  document.getElementById('set-detail-logo').src = set.images?.logo || '';
+  document.getElementById('set-detail-name').innerHTML = `${set.name.split(' ').slice(0,-1).join(' ')} <span style="color:var(--accent)">${set.name.split(' ').slice(-1)}</span>`;
+  document.getElementById('set-detail-meta').textContent = `${set.series || ''} · ${set.releaseDate || ''} · ${set.total || set.printedTotal || '?'} cards`;
+
+  const grid = document.getElementById('set-cards-grid');
+  const status = document.getElementById('set-cards-status');
+  const countEl = document.getElementById('set-card-count');
+  grid.innerHTML = ''; countEl.textContent = ''; status.textContent = 'Loading cards...'; status.style.display = 'block';
+
+  try {
+    const res = await fetch(`/api/pokemon?path=cards&q=set.id:${set.id}&orderBy=number&pageSize=250`);
+    const data = await res.json();
+    currentSetCards = data.data || [];
+    data.data?.forEach(card => { cardCache[card.id] = card; });
+
+    status.style.display = 'none';
+    countEl.textContent = `${currentSetCards.length} cards in ${set.name}`;
+    renderSetCards(currentSetCards, grid);
+  } catch(e) {
+    status.textContent = 'Error loading cards.'; status.style.display = 'block';
+  }
+}
+
+function renderSetCards(cards, grid) {
+  grid.innerHTML = '';
+  if (!cards.length) { grid.innerHTML = '<div class="status-msg">No cards found.</div>'; return; }
+  cards.forEach(card => { cardCache[card.id] = card; renderSearchCard(card, grid); });
+}
+
+// Filter within set
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('set-filter-input')?.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    const grid = document.getElementById('set-cards-grid');
+    const filtered = q ? currentSetCards.filter(c => c.name.toLowerCase().includes(q)) : currentSetCards;
+    document.getElementById('set-card-count').textContent = `${filtered.length} cards`;
+    renderSetCards(filtered, grid);
+  });
+});
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────
+const POKEMON_NAMES = [
+  'Abomasnow','Abra','Absol','Accelgor','Aegislash','Aerodactyl','Aggron','Aipom','Alakazam','Alolan',
+  'Alomomola','Altaria','Amaura','Ambipom','Amoonguss','Ampharos','Annihilape','Appletun','Applin',
+  'Araquanid','Arcanine','Arceus','Archen','Archeops','Armarouge','Aromatisse','Arrokuda','Articuno',
+  'Audino','Aurorus','Avalugg','Axew','Azelf','Azumarill','Azurill',
+  'Bagon','Baltoy','Banette','Barboach','Barraskewda','Basculin','Bastiodon','Bayleef','Beartic',
+  'Beautifly','Beedrill','Beheeyem','Beldum','Bellossom','Bellsprout','Bewear','Bibarel','Bidoof',
+  'Bisharp','Blacephalon','Blastoise','Blaziken','Blipbug','Blissey','Boldore','Boltund','Bounsweet',
+  'Braixen','Brambleghast','Braviary','Breloom','Brionne','Bronzong','Bronzor','Bruxish','Budew',
+  'Buizel','Bulbasaur','Buneary','Bunnelby','Burmy','Buzzwole',
+  'Cacnea','Cacturne','Calyrex','Camompt','Carbink','Carkol','Carnivine','Carracosta','Carvanha',
+  'Castform','Caterpie','Celebi','Celesteela','Centiskorch','Chandelure','Chansey','Charizard',
+  'Charmander','Charmeleon','Chatot','Cherrim','Cherubi','Chesnaught','Chespin','Chikorita',
+  'Chimchar','Chimecho','Chinchou','Chingling','Cinccino','Cinderace','Clamperl','Clauncher',
+  'Clawitzer','Claydol','Clefable','Clefairy','Cleffa','Clobbopus','Cloyster','Coalossal',
+  'Cobalion','Cofagrigus','Combee','Combusken','Comfey','Conkeldurr','Copperajah','Corphish',
+  'Corsola','Corviknight','Corvisquire','Cosmoem','Cosmog','Cottonee','Crabominable','Crabrawler',
+  'Cradily','Cramorant','Cranidos','Crawdaunt','Cresselia','Croagunk','Crobat','Croconaw','Crustle',
+  'Cryogonal','Cubchoo','Cubone','Cufant','Cursola','Cutiefly','Cyndaquil',
+  'Darkrai','Darmanitan','Dartrix','Dedenne','Deino','Delcatty','Delibird','Delphox','Dewgong',
+  'Dewott','Dhelmise','Dialga','Diancie','Diggersby','Diglett','Ditto','Dodrio','Doduo','Donphan',
+  'Doublade','Dragonair','Dragonite','Dragapult','Dragapult','Drampa','Drapion','Dratini','Drednaw',
+  'Dreepy','Drifblim','Drifloon','Drilbur','Drowzee','Druddigon','Ducklett','Dugtrio','Dunsparce',
+  'Duosion','Durant','Dusclops','Dusknoir','Duskull','Dustox','Dwebble',
+  'Eelektrik','Eelektross','Eevee','Eggs','Ekans','Eldegoss','Electabuzz','Electivire','Electrike',
+  'Electrode','Elekid','Elgyem','Emboar','Emolga','Empoleon','Entei','Espeon','Espurr','Eternatus',
+  'Excadrill','Exeggcute','Exeggutor','Exploud',
+  'Falinks','Farfetchd','Farigiraf','Fearow','Feebas','Fennekin','Feraligatr','Ferroseed','Ferrothorn',
+  'Fini','Finneon','Flaaffy','Flapple','Flareon','Fletchinder','Fletchling','Floatzel','Florges',
+  'Flygon','Fomantis','Foongus','Forretress','Fraxure','Frillish','Froakie','Frogadier','Frosmoth',
+  'Furfrou','Furret','Fuecoco',
+  'Gabite','Gallade','Galvantula','Garbodor','Garchomp','Gardevoir','Gastly','Gastrodon','Gengar',
+  'Geodude','Gible','Gigalith','Girafarig','Glaceon','Glalie','Glameow','Gligar','Gliscor','Gloom',
+  'Gogoat','Golbat','Goldeen','Golduck','Golem','Golett','Golurk','Goodra','Goomy','Gorebyss',
+  'Gossifleur','Gothita','Gothitelle','Gothorita','Gourgeist','Granbull','Grapploct','Graveler',
+  'Greedent','Greninja','Grimer','Grookey','Grotle','Groudon','Grovyle','Growlithe','Grubbin',
+  'Gumshoos','Gurdurr','Gyarados',
+  'Hakamo-o','Happiny','Hariyama','Haunter','Hawlucha','Haxorus','Heatmor','Heatran','Heliolisk',
+  'Helioptile','Heracross','Hippopotas','Hippowdon','Hitmonchan','Hitmonlee','Hitmontop','Ho-Oh',
+  'Honchkrow','Honedge','Hoopa','Hoppip','Horsea','Houndoom','Houndour','Huntail','Hydreigon',
+  'Hypno',
+  'Igglybuff','Illumise','Impidimp','Incineroar','Indeedee','Inteleon','Ivysaur',
+  'Jangmo-o','Jellicent','Jigglypuff','Jirachi','Jolteon','Joltik','Jumpluff','Jynx',
+  'Kabuto','Kabutops','Kadabra','Kakuna','Kangaskhan','Kartana','Kecleon','Kingdra','Kingler',
+  'Kirlia','Klang','Klefki','Klink','Klinklang','Komala','Kommo-o','Krabby','Kricketot','Kricketune',
+  'Krokorok','Krookodile','Kubfu','Kyogre','Kyurem',
+  'Lairon','Lampent','Lanturn','Lapras','Larvesta','Larvitar','Latias','Latios','Leafeon','Leavanny',
+  'Ledian','Ledyba','Lickilicky','Lickitung','Liepard','Lileep','Lilligant','Lillipup','Linoone',
+  'Litleo','Litwick','Lokix','Lopunny','Lotad','Loudred','Lucario','Ludicolo','Lugia','Lumineon',
+  'Lunala','Lunatone','Lurantis','Luvdisc','Luxio','Luxray',
+  'Machamp','Machoke','Machop','Magby','Magcargo','Magearna','Magikarp','Magmar','Magmortar',
+  'Magnemite','Magneton','Magnezone','Makuhita','Malamar','Mamoswine','Manaphy','Mandibuzz',
+  'Manectric','Mankey','Mantine','Mantyke','Maractus','Mareanie','Mareep','Marill','Marowak',
+  'Marshadow','Masquerain','Mawile','Medicham','Meditite','Meganium','Meloetta','Meowstic','Meowth',
+  'Mesprit','Metagross','Metang','Metapod','Mew','Mewtwo','Mienfoo','Mienshao','Mightyena',
+  'Milcery','Milotic','Miltank','Mimikyu','Minccino','Minior','Minun','Misdreavus','Mismagius',
+  'Moltres','Morelull','Morgrem','Morpeko','Mothim','Mr. Mime','Mr. Rime','Mudkip','Mudsdale',
+  'Munchlax','Munna','Murkrow','Musharna',
+  'Naganadel','Necrozma','Nickit','Nihilego','Nincada','Ninetales','Ninjask','Noctowl','Noibat',
+  'Noivern','Nosepass','Numel','Nuzleaf',
+  'Obstagoon','Octillery','Oddish','Omanyte','Omastar','Onix','Orbeetle','Oricorio','Oshawott',
+  'Pachirisu','Palkia','Palossand','Pancham','Pangoro','Paras','Parasect','Passimian','Pawniard',
+  'Pecharunt','Pelipper','Persian','Phantump','Phanpy','Pichu','Pidgeot','Pidgeotto','Pidgey',
+  'Pidove','Pignite','Pikachu','Pikipek','Pilowswine','Pineco','Pinsir','Piplup','Plusle','Politoed',
+  'Poliwag','Poliwhirl','Poliwrath','Ponyta','Poochyena','Popplio','Porygon','Porygon-Z','Porygon2',
+  'Primarina','Primeape','Prinplup','Probopass','Psyduck','Pumpkaboo','Purrloin','Purugly',
+  'Pyroar','Pyukumuku',
+  'Quagsire','Quilava','Quilladin','Quaxly','Quaxwell','Quaquaval',
+  'Raichu','Raikou','Ralts','Rampardos','Rapidash','Raticate','Rattata','Rayquaza','Regice',
+  'Regidrago','Regieleki','Regigigas','Regirock','Registeel','Relicanth','Remoraid','Reshiram',
+  'Reuniclus','Rhyhorn','Rhydon','Rhyperior','Riolu','Rockruff','Roggenrola','Roselia','Roserade',
+  'Rotom','Rowlet','Rufflet',
+  'Salandit','Salazzle','Samurott','Sandaconda','Sandile','Sandshrew','Sandslash','Sandygast',
+  'Sawk','Sawsbuck','Scatterbug','Sceptile','Scizor','Scolipede','Scrafty','Scraggy','Scyther',
+  'Seadra','Seaking','Sealeo','Seedot','Seel','Seismitoad','Sentret','Serperior','Servine','Seviper',
+  'Sewaddle','Sharpedo','Shaymin','Shedinja','Shelgon','Shellder','Shelmet','Shellos','Shieldon',
+  'Shiftry','Shiinotic','Shinx','Shroomish','Shuckle','Shuppet','Sigilyph','Silcoon','Silvally',
+  'Simipour','Simisage','Simisear','Skarmory','Skovet','Skiploom','Skitty','Skorupi','Skrelp',
+  'Skuntank','Slaking','Slakoth','Sliggoo','Slowbro','Slowking','Slowpoke','Slugma','Slurpuff',
+  'Smeargle','Smoochum','Sneasel','Snivy','Snom','Snorlax','Snorunt','Snover','Snubbull','Sobble',
+  'Solosis','Solrock','Spearow','Spectrier','Spewpa','Spheal','Spinarak','Spinda','Spiritomb',
+  'Spoink','Spritzee','Squirtle','Stakataka','Stantler','Staraptor','Staravia','Starly','Starmie',
+  'Staryu','Steelix','Steenee','Stufful','Stunfisk','Stunky','Sudowoodo','Suicune','Sunflora',
+  'Sunkern','Surskit','Swablu','Swadloon','Swalot','Swampert','Swanna','Swellow','Swinub','Swoobat',
+  'Sylveon','Sprigatito','Floragato','Meowscarada',
+  'Taillow','Talonflame','Tangela','Tangrowth','Tapu Bulu','Tapu Fini','Tapu Koko','Tapu Lele',
+  'Tauros','Teddiursa','Tentacool','Tentacruel','Tepig','Terrakion','Togekiss','Togepi','Togetic',
+  'Torchic','Torkoal','Tornadus','Torterra','Totodile','Toxapex','Toxicroak','Toxtricity','Tranquill',
+  'Trapinch','Treecko','Trevenant','Tropius','Trubbish','Tsareena','Turtonator','Turtwig','Tynamo',
+  'Type: Null','Typhlosion','Tyranitar','Tyrantrum','Tyrogue','Tyrunt',
+  'Umbreon','Unfezant','Unown','Ursaring','Ursaluna','Urshifu',
+  'Vanillish','Vanillite','Vanilluxe','Vaporeon','Venipede','Venomoth','Venonat','Venusaur',
+  'Vespiquen','Victini','Vigoroth','Vikavolt','Vileplume','Virizion','Vivillon','Volbeat',
+  'Volcanion','Volcarona','Voltorb','Vullaby','Vulpix',
+  'Wailmer','Wailord','Walrein','Wartortle','Watchog','Weavile','Weedle','Weepinbell','Weezing',
+  'Whimsicott','Whirlipede','Whiscash','Whismur','Wigglytuff','Wishiwashi','Wobbuffet','Woobat',
+  'Wooloo','Wooper','Wormadam','Wurmple','Wynaut',
+  'Xatu','Xerneas','Xurkitree',
+  'Yamask','Yanma','Yanmega','Yveltal',
+  'Zangoose','Zapdos','Zarude','Zeraora','Zigzagoon','Zoroark','Zorua','Zubat','Zweilous','Zygarde',
+];
+
+let autocompleteActive = false;
+
+function initAutocomplete() {
+  const input = document.getElementById('search-input');
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', function() {
+    const val = this.value.trim().toLowerCase();
+    dropdown.innerHTML = '';
+    if (val.length < 2) { dropdown.style.display = 'none'; return; }
+
+    const matches = POKEMON_NAMES
+      .filter(n => n.toLowerCase().startsWith(val))
+      .slice(0, 8);
+
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+
+    matches.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.innerHTML = `<span style="color:var(--accent);font-weight:700">${name.slice(0, val.length)}</span>${name.slice(val.length)}`;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = name;
+        dropdown.style.display = 'none';
+        searchCards();
+      });
+      dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { dropdown.style.display = 'none'; }, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    const active = dropdown.querySelector('.autocomplete-item.ac-active');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!active) items[0]?.classList.add('ac-active');
+      else { active.classList.remove('ac-active'); (active.nextElementSibling || items[0])?.classList.add('ac-active'); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!active) items[items.length-1]?.classList.add('ac-active');
+      else { active.classList.remove('ac-active'); (active.previousElementSibling || items[items.length-1])?.classList.add('ac-active'); }
+    } else if (e.key === 'Enter') {
+      if (active) { input.value = active.textContent; dropdown.style.display = 'none'; searchCards(); e.preventDefault(); }
+    } else if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
 // ── INIT ──────────────────────────────────────────────────────────
 document.getElementById('search-btn').addEventListener('click',searchCards);
 document.getElementById('search-input').addEventListener('keydown',e=>e.key==='Enter'&&searchCards());
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCardModal();closeAuthModal();}});
+initAutocomplete();
 
 updateAuthUI();
 if(currentSession)loadMyVotes();
