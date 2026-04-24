@@ -7,448 +7,203 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-
 :root {
-  --bg: #000000;
-  --surface: #0d0d0d;
-  --surface2: #141414;
-  --border: #1e1e1e;
-  --border2: #2a2a2a;
-  --text: #ffffff;
-  --muted: #555;
-  --muted2: #888;
-  --accent: #C8FF00;
-  --accent-dim: rgba(200,255,0,0.12);
-  --accent-border: rgba(200,255,0,0.35);
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'Barlow', sans-serif;
+  --bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:#1e1e1e;--border2:#2a2a2a;
+  --text:#fff;--muted:#555;--muted2:#888;--accent:#C8FF00;
+  --accent-dim:rgba(200,255,0,0.12);--accent-border:rgba(200,255,0,0.35);
+  --font-display:'Bebas Neue',sans-serif;--font-body:'Barlow',sans-serif;
 }
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;}
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  min-height: 100vh;
-}
+/* HEADER */
+header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;background:rgba(0,0,0,0.96);backdrop-filter:blur(10px);z-index:50;}
+.logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.08em;color:var(--text);display:flex;align-items:center;gap:6px;}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block;box-shadow:0 0 8px var(--accent);}
+.header-right{display:flex;align-items:center;gap:8px;}
+nav{display:flex;gap:2px;}
+nav button{background:none;border:none;color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:6px 16px;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-transform:uppercase;}
+nav button:hover{color:var(--text);background:var(--surface2);}
+nav button.active{color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);}
 
-/* ── HEADER ── */
-header {
-  border-bottom: 1px solid var(--border);
-  padding: 0 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 58px;
-  position: sticky;
-  top: 0;
-  background: rgba(0,0,0,0.96);
-  backdrop-filter: blur(10px);
-  z-index: 50;
-}
+/* VOTE COUNTER */
+.vote-counter{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted2);}
+.vote-counter span{font-family:var(--font-display);font-size:1.1rem;color:var(--accent);letter-spacing:0.04em;}
+.vote-counter.empty span{color:#ff4444;}
 
-.logo {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  letter-spacing: 0.08em;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* AUTH BUTTONS */
+.btn-login{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.btn-login:hover{color:var(--text);}
+.btn-register{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.btn-register:hover{opacity:0.85;}
+.btn-logout{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;}
+.btn-logout:hover{color:var(--text);}
+.username-pill{font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;}
+.username-pill:hover{text-decoration:underline;}
 
-.logo-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 0 8px var(--accent);
-}
+/* VIEWS */
+.view{display:none;padding:2rem;max-width:1280px;margin:0 auto;}
+.view.active{display:block;}
 
-nav { display: flex; gap: 2px; }
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.page-header h1{font-family:var(--font-display);font-size:3.5rem;letter-spacing:0.06em;line-height:1;}
+.page-header h1 span{color:var(--accent);}
+.page-sub{font-size:12px;color:var(--muted2);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px;}
 
-nav button {
-  background: none;
-  border: none;
-  color: var(--muted2);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
+/* STATS BAR */
+.stats-bar{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:fit-content;}
+.stat{padding:12px 28px;text-align:center;border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat-num{font-family:var(--font-display);font-size:2rem;color:var(--accent);letter-spacing:0.04em;line-height:1;}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px;}
 
-nav button:hover { color: var(--text); background: var(--surface2); }
-nav button.active {
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-}
+/* LEADERBOARD */
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.lb-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
+.lb-card:hover{transform:translateY(-3px);border-color:var(--border2);}
+.lb-card.top1{border-color:var(--accent);box-shadow:0 0 20px rgba(200,255,0,0.1);}
+.lb-card.top2{border-color:#aaa;}
+.lb-card.top3{border-color:#cd7f32;}
+.rank-badge{position:absolute;top:8px;left:8px;font-family:var(--font-display);font-size:1rem;background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);padding:1px 9px;border-radius:5px;letter-spacing:0.06em;z-index:2;border:1px solid rgba(255,255,255,0.08);}
+.top1 .rank-badge{color:var(--accent);border-color:var(--accent-border);}
+.top2 .rank-badge{color:#aaa;}
+.top3 .rank-badge{color:#cd7f32;}
+.lb-card:not(.top1):not(.top2):not(.top3) .rank-badge{color:var(--muted2);}
+.lb-card img{width:100%;display:block;}
+.lb-card-info{padding:10px 12px 12px;}
+.lb-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-card-set{font-size:10px;color:var(--muted2);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-vote-row{display:flex;align-items:center;justify-content:space-between;}
+.vote-count{font-family:var(--font-display);font-size:1.6rem;color:var(--accent);letter-spacing:0.04em;line-height:1;}
+.vote-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+.vote-btn-lb{background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);font-size:16px;width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.vote-btn-lb:hover{background:rgba(200,255,0,0.22);}
+.vote-btn-lb.voted{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
 
-/* ── VIEWS ── */
-.view { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
-.view.active { display: block; }
+/* SEARCH */
+.search-row{display:flex;gap:8px;max-width:560px;margin-bottom:1.5rem;}
+.search-row input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:15px;font-weight:500;padding:11px 16px;border-radius:8px;outline:none;transition:border-color 0.15s;}
+.search-row input::placeholder{color:var(--muted);}
+.search-row input:focus{border-color:#333;}
+.search-row button{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 24px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.search-row button:hover{opacity:0.88;}
+.search-count{font-size:12px;color:var(--muted2);margin-bottom:1.5rem;}
+.search-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
+.s-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.s-card.voted-card{border-color:var(--accent-border);}
+.s-card img{width:100%;display:block;}
+.s-card-body{padding:8px 10px 10px;}
+.s-card-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-card-set{font-size:10px;color:var(--muted2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-card-footer{display:flex;align-items:center;gap:6px;}
+.s-vote-count{font-size:11px;color:var(--muted2);min-width:40px;}
+.s-vote-btn{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:11px;font-weight:600;padding:5px 0;border-radius:6px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.s-vote-btn:hover{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
+.s-vote-btn.voted{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
 
-/* ── PAGE HEADER ── */
-.page-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
+/* PROFILE */
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;color:var(--accent);flex-shrink:0;}
+.profile-username{font-family:var(--font-display);font-size:2.5rem;letter-spacing:0.06em;line-height:1;}
+.profile-meta{display:flex;gap:1rem;margin-top:6px;flex-wrap:wrap;}
+.profile-meta span{font-size:11px;color:var(--muted2);}
+.profile-meta a{font-size:11px;color:var(--accent);text-decoration:none;}
+.profile-meta a:hover{text-decoration:underline;}
+.vote-slots{display:flex;gap:6px;margin-bottom:2rem;flex-wrap:wrap;}
+.vote-slot{width:36px;height:36px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.vote-slot.used{border-color:var(--accent-border);background:var(--accent-dim);color:var(--accent);}
+.vote-slot.empty{color:var(--muted);}
+.profile-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color 0.15s,transform 0.15s;}
+.profile-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.profile-card img{width:100%;display:block;}
+.profile-card-info{padding:8px 10px;}
+.profile-card-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-card-set{font-size:10px;color:var(--muted2);}
 
-.page-header h1 {
-  font-family: var(--font-display);
-  font-size: 3.5rem;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  color: var(--text);
-}
+/* CARD MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.card-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;display:flex;position:relative;}
+.card-modal-img{width:280px;min-width:280px;padding:1.5rem;}
+.card-modal-img img{width:100%;border-radius:10px;}
+.card-modal-body{flex:1;padding:1.5rem 1.5rem 1.5rem 0;}
+.card-modal-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;}
+.card-modal-close:hover{color:var(--text);}
+.card-modal-name{font-family:var(--font-display);font-size:2rem;letter-spacing:0.05em;line-height:1;margin-bottom:4px;}
+.card-modal-set{font-size:12px;color:var(--muted2);margin-bottom:1.2rem;}
+.card-detail-row{display:flex;gap:8px;margin-bottom:0.6rem;align-items:baseline;}
+.card-detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;min-width:70px;}
+.card-detail-val{font-size:13px;color:var(--text);font-weight:500;}
+.attack-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;margin-top:8px;}
+.attack-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.attack-name{font-size:13px;font-weight:700;color:var(--text);}
+.attack-damage{font-family:var(--font-display);font-size:1.2rem;color:var(--accent);letter-spacing:0.04em;}
+.attack-cost{font-size:11px;color:var(--muted2);margin-bottom:4px;}
+.attack-text{font-size:12px;color:var(--muted2);line-height:1.5;}
+.divider{height:1px;background:var(--border);margin:1rem 0;}
+.modal-vote-btn{margin-top:0.5rem;width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.modal-vote-btn:hover{opacity:0.85;}
+.modal-vote-btn.voted{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);}
+.modal-vote-btn:disabled{opacity:0.4;cursor:not-allowed;}
 
-.page-header h1 span { color: var(--accent); }
+/* AUTH MODAL */
+.auth-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.auth-overlay.open{display:flex;}
+.auth-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:2rem;position:relative;max-height:90vh;overflow-y:auto;}
+.auth-modal h2{font-family:var(--font-display);font-size:2rem;letter-spacing:0.06em;margin-bottom:4px;}
+.auth-modal p{font-size:13px;color:var(--muted2);margin-bottom:1.5rem;}
+.auth-tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--surface2);border-radius:8px;padding:3px;}
+.auth-tab{flex:1;background:none;border:none;color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:7px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.auth-tab.active{background:var(--bg);color:var(--text);}
+.auth-field{margin-bottom:1rem;}
+.auth-field label{display:block;font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;transition:border-color 0.15s;}
+.auth-field input:focus{border-color:#444;}
+.auth-field input::placeholder{color:var(--muted);}
+.auth-optional{font-size:10px;color:var(--muted);margin-left:4px;}
+.auth-submit{width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;margin-top:0.5rem;}
+.auth-submit:hover{opacity:0.85;}
+.auth-submit:disabled{opacity:0.5;cursor:not-allowed;}
+.auth-error{font-size:13px;color:#ff5555;margin-top:0.8rem;text-align:center;min-height:18px;}
+.auth-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.auth-close:hover{color:var(--text);}
 
-.page-sub {
-  font-size: 12px;
-  color: var(--muted2);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
+/* MISC */
+.status-msg{text-align:center;padding:4rem 0;color:var(--muted);font-size:14px;}
+.no-img-placeholder{height:130px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;padding:10px 22px;border-radius:8px;z-index:300;transition:transform 0.25s ease;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
 
-/* ── STATS BAR ── */
-.stats-bar {
-  display: flex;
-  gap: 0;
-  margin-bottom: 2rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  width: fit-content;
-}
-
-.stat {
-  padding: 12px 28px;
-  text-align: center;
-  border-right: 1px solid var(--border);
-}
-
-.stat:last-child { border-right: none; }
-
-.stat-num {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-shadow: 0 0 20px rgba(200,255,0,0.3);
-}
-
-.stat-label {
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 3px;
-}
-
-/* ── LEADERBOARD GRID ── */
-.lb-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 14px;
-}
-
-.lb-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  transition: border-color 0.15s, transform 0.15s;
-  cursor: default;
-}
-
-.lb-card:hover { transform: translateY(-3px); border-color: var(--border2); }
-.lb-card.top1 { border-color: var(--accent); box-shadow: 0 0 20px rgba(200,255,0,0.1); }
-.lb-card.top2 { border-color: #aaaaaa; }
-.lb-card.top3 { border-color: #cd7f32; }
-
-.rank-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  background: rgba(0,0,0,0.82);
-  backdrop-filter: blur(6px);
-  padding: 1px 9px;
-  border-radius: 5px;
-  letter-spacing: 0.06em;
-  z-index: 2;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-.top1 .rank-badge { color: var(--accent); border-color: var(--accent-border); }
-.top2 .rank-badge { color: #aaaaaa; }
-.top3 .rank-badge { color: #cd7f32; }
-.lb-card:not(.top1):not(.top2):not(.top3) .rank-badge { color: var(--muted2); }
-
-.lb-card img { width: 100%; display: block; }
-
-.lb-card-info { padding: 10px 12px 12px; }
-
-.lb-card-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: 0.01em;
-}
-
-.lb-card-set {
-  font-size: 10px;
-  color: var(--muted2);
-  margin-bottom: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.lb-vote-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.vote-count {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  color: var(--accent);
-  letter-spacing: 0.04em;
-  line-height: 1;
-}
-
-.vote-label {
-  font-size: 9px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-top: 2px;
-}
-
-.vote-btn-lb {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
-  color: var(--accent);
-  font-size: 16px;
-  width: 34px;
-  height: 34px;
-  border-radius: 7px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-
-.vote-btn-lb:hover { background: rgba(200,255,0,0.22); }
-.vote-btn-lb.voted { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
-
-/* ── SEARCH PAGE ── */
-.search-row {
-  display: flex;
-  gap: 8px;
-  max-width: 560px;
-  margin-bottom: 1.5rem;
-}
-
-.search-row input {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 500;
-  padding: 11px 16px;
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.15s;
-  letter-spacing: 0.01em;
-}
-
-.search-row input::placeholder { color: var(--muted); }
-.search-row input:focus { border-color: #333; }
-
-.search-row button {
-  background: var(--accent);
-  border: none;
-  color: #000;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 11px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.search-row button:hover { opacity: 0.88; }
-
-.search-count {
-  font-size: 12px;
-  color: var(--muted2);
-  margin-bottom: 1.5rem;
-  letter-spacing: 0.03em;
-}
-
-.search-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-  gap: 12px;
-}
-
-.s-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  transition: border-color 0.15s, transform 0.15s;
-}
-
-.s-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-.s-card.voted-card { border-color: var(--accent-border); }
-
-.s-card img { width: 100%; display: block; }
-
-.s-card-body { padding: 8px 10px 10px; }
-
-.s-card-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.s-card-set {
-  font-size: 10px;
-  color: var(--muted2);
-  margin-bottom: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.s-card-footer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.s-vote-count {
-  font-size: 11px;
-  color: var(--muted2);
-  min-width: 40px;
-}
-
-.s-vote-btn {
-  flex: 1;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--muted2);
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 5px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.s-vote-btn:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent-border);
-  color: var(--accent);
-}
-
-.s-vote-btn.voted {
-  background: var(--accent-dim);
-  border-color: var(--accent-border);
-  color: var(--accent);
-}
-
-/* ── MISC ── */
-.status-msg {
-  text-align: center;
-  padding: 4rem 0;
-  color: var(--muted);
-  font-size: 14px;
-  letter-spacing: 0.03em;
-}
-
-.toast {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 22px;
-  border-radius: 8px;
-  z-index: 200;
-  transition: transform 0.25s ease;
-  pointer-events: none;
-  white-space: nowrap;
-  letter-spacing: 0.03em;
-}
-
-.toast.show { transform: translateX(-50%) translateY(0); }
-
-.no-img-placeholder {
-  height: 130px;
-  background: var(--surface2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 11px;
+@media(max-width:600px){
+  .card-modal{flex-direction:column;}
+  .card-modal-img{width:100%;min-width:unset;padding:1rem 1rem 0;}
+  .card-modal-body{padding:1rem;}
+  .page-header{flex-direction:column;align-items:flex-start;gap:1rem;}
+  header{padding:0 1rem;}
+  nav button{padding:6px 10px;font-size:11px;}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <span class="logo-dot"></span>
-    GACHA<span style="color:var(--accent)">CARDS</span>
-  </div>
+  <div class="logo"><span class="logo-dot"></span>GACHA<span style="color:var(--accent)">CARDS</span></div>
   <nav>
-    <button class="active" onclick="showView('leaderboard', this)">Most Wanted</button>
-    <button onclick="showView('search', this)">Search Cards</button>
+    <button class="active" onclick="showView('leaderboard',this)">Most Wanted</button>
+    <button onclick="showView('search',this)">Search Cards</button>
+    <button id="nav-profile" style="display:none" onclick="showView('profile',this)">My Profile</button>
   </nav>
+  <div class="header-right" id="header-auth">
+    <button class="btn-login" onclick="openAuth('login')">Log In</button>
+    <button class="btn-register" onclick="openAuth('register')">Sign Up</button>
+  </div>
+  <div class="header-right" id="header-user" style="display:none">
+    <div class="vote-counter" id="vote-counter"><span id="votes-left">10</span>&nbsp;votes left</div>
+    <span class="username-pill" id="header-username" onclick="showView('profile',document.getElementById('nav-profile'))"></span>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
 </header>
 
 <!-- LEADERBOARD -->
@@ -459,18 +214,9 @@ nav button.active {
       <div class="page-sub">Community voted · Top cards your customers want</div>
     </div>
     <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-num" id="stat-cards">—</div>
-        <div class="stat-label">Cards</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-votes">—</div>
-        <div class="stat-label">Votes</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-pokemon">—</div>
-        <div class="stat-label">Pokémon</div>
-      </div>
+      <div class="stat"><div class="stat-num" id="stat-cards">—</div><div class="stat-label">Cards</div></div>
+      <div class="stat"><div class="stat-num" id="stat-votes">—</div><div class="stat-label">Votes</div></div>
+      <div class="stat"><div class="stat-num" id="stat-pokemon">—</div><div class="stat-label">Pokémon</div></div>
     </div>
   </div>
   <div class="lb-grid" id="lb-grid"></div>
@@ -493,246 +239,486 @@ nav button.active {
   <div id="search-status" class="status-msg">Search for a Pokémon to see all their cards</div>
 </div>
 
+<!-- PROFILE -->
+<div class="view" id="view-profile">
+  <div id="profile-content"><div class="status-msg">Loading profile...</div></div>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="card-modal-overlay" onclick="closeCardModal(event)">
+  <div class="card-modal">
+    <button class="card-modal-close" onclick="closeCardModal()">✕</button>
+    <div class="card-modal-img"><img id="cm-img" src="" alt=""/></div>
+    <div class="card-modal-body">
+      <div class="card-modal-name" id="cm-name"></div>
+      <div class="card-modal-set" id="cm-set"></div>
+      <div class="card-detail-row"><span class="card-detail-label">HP</span><span class="card-detail-val" id="cm-hp"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Type</span><span class="card-detail-val" id="cm-type"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Rarity</span><span class="card-detail-val" id="cm-rarity"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Artist</span><span class="card-detail-val" id="cm-artist"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Weakness</span><span class="card-detail-val" id="cm-weakness"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Retreat</span><span class="card-detail-val" id="cm-retreat"></span></div>
+      <div id="cm-attacks"></div>
+      <div class="divider"></div>
+      <div id="cm-vote-count" style="font-size:13px;color:var(--muted2);margin-bottom:10px;"></div>
+      <button class="modal-vote-btn" id="cm-vote-btn" onclick="modalVote()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="closeAuthModal(event)">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuthModal()">✕</button>
+    <h2>GACHA<span style="color:var(--accent)">CARDS</span></h2>
+    <p>Join to vote on the cards you want</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Sign Up</button>
+    </div>
+    <div id="form-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="l-email" placeholder="your@email.com"/></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="l-password" placeholder="••••••••"/></div>
+      <button class="auth-submit" id="login-btn" onclick="doLogin()">Log In</button>
+      <div class="auth-error" id="login-error"></div>
+    </div>
+    <div id="form-register" style="display:none">
+      <div class="auth-field"><label>Username</label><input type="text" id="r-username" placeholder="YourUsername"/></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="r-email" placeholder="your@email.com"/></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="r-password" placeholder="Min 6 characters"/></div>
+      <div class="auth-field"><label>Discord ID <span class="auth-optional">(optional)</span></label><input type="text" id="r-discord" placeholder="YourDiscord#1234"/></div>
+      <div class="auth-field"><label>Twitter <span class="auth-optional">(optional)</span></label><input type="text" id="r-twitter" placeholder="@YourHandle"/></div>
+      <div class="auth-field"><label>Wallet Address <span class="auth-optional">(optional)</span></label><input type="text" id="r-wallet" placeholder="Solana wallet"/></div>
+      <button class="auth-submit" id="register-btn" onclick="doRegister()">Create Account</button>
+      <div class="auth-error" id="register-error"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── SEED DATA ────────────────────────────────────────────────────
-const SEED_POKEMON = [
-  { queries: ['Mimikyu ex', 'Mimikyu VMAX', 'Mimikyu GX', 'Mimikyu V', 'Mimikyu'] },
-  { queries: ['Gastly'] },
-  { queries: ['Haunter'] },
-  { queries: ['Gengar ex', 'Gengar VMAX', 'Gengar GX', 'Gengar V', 'Gengar'] },
-];
-
-const SEED_COUNTS = [52, 44, 38, 33, 29, 26, 22, 19, 17, 15, 13, 11, 10, 9, 8, 7, 6, 5, 4, 3];
-
-let MOCK_VOTES = {};
-let votes = JSON.parse(localStorage.getItem('gc_votes') || '{}');
+// ── STATE ─────────────────────────────────────────────────────────
+let currentUser = JSON.parse(localStorage.getItem('gc_user')||'null');
+let currentSession = localStorage.getItem('gc_session')||null;
+let myVotedIds = new Set();
 let cardCache = {};
+let globalVoteCounts = {};
+let currentModalCard = null;
+let votesRemaining = 10;
 
-function saveVotes() { localStorage.setItem('gc_votes', JSON.stringify(votes)); }
-
-function getVoteCount(id) {
-  return (MOCK_VOTES[id]?.votes || 0) + (votes[id]?.count || 0);
-}
-
-function hasVoted(id) { return !!votes[id]?.voted; }
-
-function castVote(id, cardData) {
-  if (!votes[id]) votes[id] = { count: 0, voted: false, ...cardData };
-  if (votes[id].voted) {
-    votes[id].count = Math.max(0, votes[id].count - 1);
-    votes[id].voted = false;
-    showToast('Vote removed');
-  } else {
-    votes[id].count++;
-    votes[id].voted = true;
-    showToast('✦ Added to Most Wanted');
-  }
-  saveVotes();
-}
-
-// ── TOAST ────────────────────────────────────────────────────────
+// ── TOAST ─────────────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-// ── VIEW SWITCHER ─────────────────────────────────────────────────
-function showView(name, btn) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  btn.classList.add('active');
-  if (name === 'leaderboard') seedLeaderboard();
-}
-
-// ── SEED LEADERBOARD ──────────────────────────────────────────────
-let seeded = false;
-async function seedLeaderboard() {
-  if (seeded) return;
-  seeded = true;
-
-  const grid = document.getElementById('lb-grid');
-  grid.innerHTML = '<div class="status-msg">Loading...</div>';
-
-  const fetched = [];
-
-  for (const { queries } of SEED_POKEMON) {
-    for (const q of queries) {
-      try {
-        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&orderBy=-set.releaseDate&pageSize=2`);
-        const data = await res.json();
-        for (const card of (data.data || [])) {
-          if (!cardCache[card.id]) {
-            cardCache[card.id] = card;
-            fetched.push(card);
-          }
-        }
-      } catch(e) {}
-    }
+// ── AUTH UI ───────────────────────────────────────────────────────
+function updateAuthUI(){
+  const loggedIn=!!currentUser;
+  document.getElementById('header-auth').style.display=loggedIn?'none':'flex';
+  document.getElementById('header-user').style.display=loggedIn?'flex':'none';
+  document.getElementById('nav-profile').style.display=loggedIn?'block':'none';
+  if(loggedIn){
+    document.getElementById('header-username').textContent=currentUser.username;
+    updateVoteCounter();
   }
+}
 
-  fetched.forEach((card, i) => {
-    if (!MOCK_VOTES[card.id]) {
-      MOCK_VOTES[card.id] = { votes: SEED_COUNTS[i] || 2 };
-    }
-  });
+function updateVoteCounter(){
+  const el=document.getElementById('vote-counter');
+  document.getElementById('votes-left').textContent=votesRemaining;
+  el.classList.toggle('empty',votesRemaining===0);
+}
 
+function openAuth(tab){
+  document.getElementById('auth-overlay').classList.add('open');
+  switchTab(tab);
+}
+
+function closeAuthModal(e){
+  if(!e||e.target===document.getElementById('auth-overlay')){
+    document.getElementById('auth-overlay').classList.remove('open');
+    document.getElementById('login-error').textContent='';
+    document.getElementById('register-error').textContent='';
+  }
+}
+
+function switchTab(tab){
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display=tab==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
+}
+
+// ── AUTH ACTIONS ──────────────────────────────────────────────────
+async function doLogin(){
+  const btn=document.getElementById('login-btn');
+  const errEl=document.getElementById('login-error');
+  btn.disabled=true;btn.textContent='Logging in...';errEl.textContent='';
+  try{
+    const res=await fetch('/api/auth',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'login',email:document.getElementById('l-email').value.trim(),password:document.getElementById('l-password').value})
+    });
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    currentUser=data.user;
+    currentSession=data.session?.access_token;
+    localStorage.setItem('gc_user',JSON.stringify(data.user));
+    localStorage.setItem('gc_session',currentSession);
+    closeAuthModal();updateAuthUI();
+    await loadMyVotes();
+    showToast('Welcome back, '+data.user.username+'!');
+    renderLeaderboard();
+  }catch(e){errEl.textContent='Network error. Try again.';}
+  finally{btn.disabled=false;btn.textContent='Log In';}
+}
+
+async function doRegister(){
+  const btn=document.getElementById('register-btn');
+  const errEl=document.getElementById('register-error');
+  btn.disabled=true;btn.textContent='Creating account...';errEl.textContent='';
+  const username=document.getElementById('r-username').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const password=document.getElementById('r-password').value;
+  if(!username||!email||!password){errEl.textContent='Username, email and password are required.';btn.disabled=false;btn.textContent='Create Account';return;}
+  try{
+    const res=await fetch('/api/auth',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'register',username,email,password,
+        discord_id:document.getElementById('r-discord').value.trim()||null,
+        twitter_handle:document.getElementById('r-twitter').value.trim()||null,
+        wallet_address:document.getElementById('r-wallet').value.trim()||null})
+    });
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    errEl.style.color='var(--accent)';
+    errEl.textContent='Account created! Check your email to confirm, then log in.';
+    setTimeout(()=>switchTab('login'),2500);
+  }catch(e){errEl.textContent='Network error. Try again.';}
+  finally{btn.disabled=false;btn.textContent='Create Account';}
+}
+
+function logout(){
+  currentUser=null;currentSession=null;myVotedIds=new Set();votesRemaining=10;
+  localStorage.removeItem('gc_user');localStorage.removeItem('gc_session');
+  updateAuthUI();showToast('Logged out.');
+  showView('leaderboard',document.querySelector('nav button'));
   renderLeaderboard();
 }
 
+// ── LOAD MY VOTES ─────────────────────────────────────────────────
+async function loadMyVotes(){
+  if(!currentSession)return;
+  try{
+    const res=await fetch('/api/vote',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:'my_votes'})
+    });
+    const data=await res.json();
+    if(res.ok){
+      myVotedIds=new Set((data.votes||[]).map(v=>v.card_id));
+      votesRemaining=data.votes_remaining??10;
+      updateVoteCounter();
+    }
+  }catch(e){}
+}
+
+// ── LOAD GLOBAL LEADERBOARD ───────────────────────────────────────
+async function loadLeaderboard(){
+  try{
+    const res=await fetch('/api/vote');
+    const data=await res.json();
+    if(res.ok&&data.cards){
+      globalVoteCounts={};
+      data.cards.forEach(c=>{
+        globalVoteCounts[c.card_id]={count:parseInt(c.total_votes),name:c.card_name,set:c.set_name,image:c.card_image};
+      });
+    }
+  }catch(e){}
+}
+
+// ── VIEW SWITCHER ─────────────────────────────────────────────────
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='leaderboard')renderLeaderboard();
+  if(name==='profile')renderProfile();
+}
+
 // ── LEADERBOARD ───────────────────────────────────────────────────
-function renderLeaderboard() {
-  const grid = document.getElementById('lb-grid');
+async function renderLeaderboard(){
+  const grid=document.getElementById('lb-grid');
+  grid.innerHTML='<div class="status-msg">Loading...</div>';
+  await loadLeaderboard();
 
-  const allIds = new Set([...Object.keys(MOCK_VOTES), ...Object.keys(votes)]);
-  const allCards = [];
+  // fetch images for top cards
+  const topIds=Object.entries(globalVoteCounts).sort((a,b)=>b[1].count-a[1].count).slice(0,50).map(([id])=>id);
+  await Promise.allSettled(topIds.filter(id=>!cardCache[id]).map(async id=>{
+    try{const r=await fetch(`https://api.pokemontcg.io/v2/cards/${id}`);const d=await r.json();if(d.data)cardCache[id]=d.data;}catch(e){}
+  }));
 
-  for (const id of allIds) {
-    const count = getVoteCount(id);
-    if (count === 0) continue;
-    const card = cardCache[id];
-    if (!card) continue;
-    allCards.push({ id, card, count });
-  }
+  const allCards=Object.entries(globalVoteCounts)
+    .map(([id,info])=>({id,count:info.count,card:cardCache[id],info}))
+    .filter(c=>c.count>0)
+    .sort((a,b)=>b.count-a.count);
 
-  allCards.sort((a, b) => b.count - a.count);
+  const totalVotes=allCards.reduce((s,c)=>s+c.count,0);
+  const uniquePokemon=new Set(allCards.map(c=>c.card?.name?.split(' ')[0]).filter(Boolean)).size;
+  document.getElementById('stat-cards').textContent=allCards.length||'—';
+  document.getElementById('stat-votes').textContent=totalVotes||'—';
+  document.getElementById('stat-pokemon').textContent=uniquePokemon||'—';
 
-  const totalVotes = allCards.reduce((s, c) => s + c.count, 0);
-  const uniquePokemon = new Set(allCards.map(c => c.card.name?.split(' ')[0])).size;
-  document.getElementById('stat-cards').textContent = allCards.length;
-  document.getElementById('stat-votes').textContent = totalVotes;
-  document.getElementById('stat-pokemon').textContent = uniquePokemon;
+  grid.innerHTML='';
+  if(!allCards.length){grid.innerHTML='<div class="status-msg">No votes yet — search cards and be the first to vote!</div>';return;}
 
-  grid.innerHTML = '';
+  allCards.forEach(({id,count,card,info},i)=>{
+    const rankClass=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const img=card?.images?.small||info.image||'';
+    const name=card?.name||info.name||'Unknown';
+    const set=card?.set?.name||info.set||'';
+    const voted=myVotedIds.has(id);
 
-  if (!allCards.length) {
-    grid.innerHTML = '<div class="status-msg">No voted cards yet.</div>';
-    return;
-  }
-
-  allCards.forEach(({ id, card, count }, i) => {
-    const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-    const img = card.images?.small || '';
-    const voted = hasVoted(id);
-
-    const el = document.createElement('div');
-    el.className = `lb-card ${rankClass}`;
-    el.innerHTML = `
+    const el=document.createElement('div');
+    el.className=`lb-card ${rankClass}`;
+    el.innerHTML=`
       <div class="rank-badge">#${i+1}</div>
-      ${img
-        ? `<img src="${img}" alt="${card.name}" loading="lazy"/>`
-        : `<div class="no-img-placeholder">No image</div>`}
+      ${img?`<img src="${img}" alt="${name}" loading="lazy"/>`:`<div class="no-img-placeholder">No image</div>`}
       <div class="lb-card-info">
-        <div class="lb-card-name">${card.name}</div>
-        <div class="lb-card-set">${card.set?.name || ''} · #${card.number || '?'}</div>
+        <div class="lb-card-name">${name}</div>
+        <div class="lb-card-set">${set} · #${card?.number||'?'}</div>
         <div class="lb-vote-row">
-          <div>
-            <div class="vote-count">${count}</div>
-            <div class="vote-label">wants</div>
-          </div>
-          <button class="vote-btn-lb ${voted ? 'voted' : ''}" title="${voted ? 'Remove vote' : 'Vote'}">
-            ${voted ? '✦' : '✧'}
-          </button>
+          <div><div class="vote-count">${count}</div><div class="vote-label">wants</div></div>
+          <button class="vote-btn-lb ${voted?'voted':''}">${voted?'✦':'✧'}</button>
         </div>
       </div>`;
 
-    el.querySelector('.vote-btn-lb').addEventListener('click', (e) => {
+    el.addEventListener('click',(e)=>{
+      if(e.target.classList.contains('vote-btn-lb'))return;
+      if(card)openCardModal(card);
+    });
+    el.querySelector('.vote-btn-lb').addEventListener('click',async(e)=>{
       e.stopPropagation();
-      castVote(id, { name: card.name, set: card.set?.name, number: card.number });
+      await castVote(id,card||{name,set:{name:set},number:card?.number,images:{small:img}});
       renderLeaderboard();
     });
-
     grid.appendChild(el);
   });
 }
 
-// ── SEARCH ────────────────────────────────────────────────────────
-async function searchCards() {
-  const q = document.getElementById('search-input').value.trim();
-  if (!q) return;
+// ── CAST VOTE ─────────────────────────────────────────────────────
+async function castVote(id,card){
+  if(!currentUser){openAuth('login');showToast('Log in to vote!');return;}
+  const isVoted=myVotedIds.has(id);
+  if(!isVoted&&votesRemaining<=0){showToast('No votes left today! Come back tomorrow.');return;}
 
-  const grid = document.getElementById('search-grid');
-  const status = document.getElementById('search-status');
-  const countEl = document.getElementById('search-count');
+  try{
+    const res=await fetch('/api/vote',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:isVoted?'unvote':'vote',card_id:id,card_name:card?.name||'',set_name:card?.set?.name||'',card_image:card?.images?.small||''})
+    });
+    const data=await res.json();
+    if(!res.ok){showToast(data.error);return;}
 
-  grid.innerHTML = '';
-  countEl.textContent = '';
-  status.textContent = 'Searching...';
-  status.style.display = 'block';
-
-  try {
-    const url = `https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&orderBy=set.releaseDate&pageSize=250`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const cards = data.data || [];
-
-    status.style.display = 'none';
-    if (!cards.length) {
-      status.textContent = 'No cards found.';
-      status.style.display = 'block';
-      return;
+    if(isVoted){
+      myVotedIds.delete(id);votesRemaining=Math.min(10,votesRemaining+1);
+      if(globalVoteCounts[id])globalVoteCounts[id].count=Math.max(0,globalVoteCounts[id].count-1);
+      showToast('Vote removed');
+    }else{
+      myVotedIds.add(id);votesRemaining=data.votes_remaining??votesRemaining-1;
+      if(!globalVoteCounts[id])globalVoteCounts[id]={count:0,name:card?.name,set:card?.set?.name,image:card?.images?.small};
+      globalVoteCounts[id].count++;
+      showToast('✦ Added to Most Wanted!');
     }
-
-    countEl.textContent = `${cards.length} card${cards.length !== 1 ? 's' : ''} found for "${q}"`;
-    cards.forEach(card => { cardCache[card.id] = card; renderSearchCard(card, grid); });
-
-  } catch(e) {
-    status.textContent = 'Error fetching cards. Try again.';
-    status.style.display = 'block';
-  }
+    updateVoteCounter();
+    if(currentModalCard?.id===id)updateModalVoteBtn();
+  }catch(e){showToast('Error. Try again.');}
 }
 
-function renderSearchCard(card, grid) {
-  const id = card.id;
-  const count = getVoteCount(id);
-  const voted = hasVoted(id);
-  const img = card.images?.small || '';
+// ── SEARCH ────────────────────────────────────────────────────────
+async function searchCards(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q)return;
+  const grid=document.getElementById('search-grid');
+  const status=document.getElementById('search-status');
+  const countEl=document.getElementById('search-count');
+  grid.innerHTML='';countEl.textContent='';
+  status.textContent='Searching...';status.style.display='block';
+  try{
+    const res=await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${encodeURIComponent(q)}"&orderBy=set.releaseDate&pageSize=250`);
+    const data=await res.json();
+    const cards=data.data||[];
+    status.style.display='none';
+    if(!cards.length){status.textContent='No cards found.';status.style.display='block';return;}
+    countEl.textContent=`${cards.length} card${cards.length!==1?'s':''} found for "${q}"`;
+    cards.forEach(card=>{cardCache[card.id]=card;renderSearchCard(card,grid);});
+  }catch(e){status.textContent='Error fetching cards. Try again.';status.style.display='block';}
+}
 
-  const el = document.createElement('div');
-  el.className = `s-card ${voted ? 'voted-card' : ''}`;
-  el.id = `sc-${id}`;
-  el.innerHTML = `
-    ${img
-      ? `<img src="${img}" alt="${card.name}" loading="lazy"/>`
-      : `<div class="no-img-placeholder" style="height:110px;">No image</div>`}
+function renderSearchCard(card,grid){
+  const id=card.id;
+  const count=globalVoteCounts[id]?.count||0;
+  const voted=myVotedIds.has(id);
+  const img=card.images?.small||'';
+
+  const el=document.createElement('div');
+  el.className=`s-card ${voted?'voted-card':''}`;
+  el.id=`sc-${id}`;
+  el.innerHTML=`
+    ${img?`<img src="${img}" alt="${card.name}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:110px">No image</div>`}
     <div class="s-card-body">
       <div class="s-card-name">${card.name}</div>
-      <div class="s-card-set">${card.set?.name || ''} · #${card.number || '?'}</div>
+      <div class="s-card-set">${card.set?.name||''} · #${card.number||'?'}</div>
       <div class="s-card-footer">
-        <span class="s-vote-count" id="vc-${id}">${count > 0 ? count + ' want' : ''}</span>
-        <button class="s-vote-btn ${voted ? 'voted' : ''}" id="vb-${id}">
-          ${voted ? '✦ Wanted' : '✧ Want'}
-        </button>
+        <span class="s-vote-count" id="vc-${id}">${count>0?count+' want':''}</span>
+        <button class="s-vote-btn ${voted?'voted':''}" id="vb-${id}">${voted?'✦ Wanted':'✧ Want'}</button>
       </div>
     </div>`;
 
-  el.querySelector(`#vb-${id}`).addEventListener('click', () => {
-    castVote(id, { name: card.name, set: card.set?.name, number: card.number });
-    const btn = document.getElementById(`vb-${id}`);
-    const vc = document.getElementById(`vc-${id}`);
-    const sc = document.getElementById(`sc-${id}`);
-    const nowVoted = hasVoted(id);
-    const newCount = getVoteCount(id);
-    btn.className = `s-vote-btn ${nowVoted ? 'voted' : ''}`;
-    btn.textContent = nowVoted ? '✦ Wanted' : '✧ Want';
-    vc.textContent = newCount > 0 ? newCount + ' want' : '';
-    if (nowVoted) sc.classList.add('voted-card'); else sc.classList.remove('voted-card');
-  });
+  // click image area → open modal
+  el.querySelector('img, .no-img-placeholder')?.addEventListener('click',()=>openCardModal(card));
+  el.querySelector('.s-card-name')?.addEventListener('click',()=>openCardModal(card));
 
+  el.querySelector(`#vb-${id}`).addEventListener('click',async(e)=>{
+    e.stopPropagation();
+    await castVote(id,card);
+    const nowVoted=myVotedIds.has(id);
+    const newCount=globalVoteCounts[id]?.count||0;
+    const btn=document.getElementById(`vb-${id}`);
+    const vc=document.getElementById(`vc-${id}`);
+    const sc=document.getElementById(`sc-${id}`);
+    if(btn){btn.className=`s-vote-btn ${nowVoted?'voted':''}`;btn.textContent=nowVoted?'✦ Wanted':'✧ Want';}
+    if(vc)vc.textContent=newCount>0?newCount+' want':'';
+    if(sc){nowVoted?sc.classList.add('voted-card'):sc.classList.remove('voted-card');}
+  });
   grid.appendChild(el);
 }
 
-// ── INIT ──────────────────────────────────────────────────────────
-document.getElementById('search-btn').addEventListener('click', searchCards);
-document.getElementById('search-input').addEventListener('keydown', e => e.key === 'Enter' && searchCards());
+// ── CARD MODAL ────────────────────────────────────────────────────
+function openCardModal(card){
+  currentModalCard=card;
+  document.getElementById('cm-img').src=card.images?.large||card.images?.small||'';
+  document.getElementById('cm-img').alt=card.name;
+  document.getElementById('cm-name').textContent=card.name;
+  document.getElementById('cm-set').textContent=`${card.set?.name||''} · #${card.number||'?'} · ${card.set?.releaseDate||''}`;
+  document.getElementById('cm-hp').textContent=card.hp||'—';
+  document.getElementById('cm-type').textContent=card.types?.join(', ')||'—';
+  document.getElementById('cm-rarity').textContent=card.rarity||'—';
+  document.getElementById('cm-artist').textContent=card.artist||'—';
+  document.getElementById('cm-weakness').textContent=card.weaknesses?.map(w=>w.type+' '+w.value).join(', ')||'—';
+  document.getElementById('cm-retreat').textContent=card.retreatCost?.length?'⬡'.repeat(card.retreatCost.length):'—';
 
-seedLeaderboard();
+  const attacksEl=document.getElementById('cm-attacks');
+  if(card.attacks?.length){
+    attacksEl.innerHTML='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin:12px 0 6px">Attacks</div>'+
+      card.attacks.map(a=>`
+        <div class="attack-item">
+          <div class="attack-header"><div class="attack-name">${a.name}</div><div class="attack-damage">${a.damage||''}</div></div>
+          <div class="attack-cost">${a.cost?.join(' · ')||''}</div>
+          ${a.text?`<div class="attack-text">${a.text}</div>`:''}
+        </div>`).join('');
+  }else{attacksEl.innerHTML='';}
+
+  const count=globalVoteCounts[card.id]?.count||0;
+  document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
+  updateModalVoteBtn();
+  document.getElementById('card-modal-overlay').classList.add('open');
+}
+
+function updateModalVoteBtn(){
+  const id=currentModalCard?.id;if(!id)return;
+  const btn=document.getElementById('cm-vote-btn');
+  const voted=myVotedIds.has(id);
+  if(!currentUser){btn.textContent='Log in to vote';btn.className='modal-vote-btn';btn.disabled=false;}
+  else{
+    btn.textContent=voted?'✦ Remove from Wanted':'✧ Add to Most Wanted';
+    btn.className=`modal-vote-btn ${voted?'voted':''}`;
+    btn.disabled=!voted&&votesRemaining<=0;
+  }
+}
+
+function closeCardModal(e){
+  if(!e||e.target===document.getElementById('card-modal-overlay')){
+    document.getElementById('card-modal-overlay').classList.remove('open');
+    currentModalCard=null;
+  }
+}
+
+async function modalVote(){
+  if(!currentUser){closeCardModal();openAuth('login');return;}
+  if(!currentModalCard)return;
+  await castVote(currentModalCard.id,currentModalCard);
+  const count=globalVoteCounts[currentModalCard.id]?.count||0;
+  document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
+  updateModalVoteBtn();
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────
+async function renderProfile(){
+  if(!currentUser){showView('leaderboard',document.querySelector('nav button'));return;}
+  const content=document.getElementById('profile-content');
+  content.innerHTML='<div class="status-msg">Loading...</div>';
+  try{
+    const res=await fetch('/api/profile',{headers:{'Authorization':'Bearer '+currentSession}});
+    const data=await res.json();
+    if(!res.ok){content.innerHTML='<div class="status-msg">Could not load profile.</div>';return;}
+    const{profile,votes,votes_remaining}=data;
+    votesRemaining=votes_remaining??votesRemaining;updateVoteCounter();
+    const usedSlots=10-(votes_remaining??10);
+    const slots=Array.from({length:10},(_,i)=>
+      `<div class="vote-slot ${i<usedSlots?'used':'empty'}">${i<usedSlots?'✦':'○'}</div>`).join('');
+
+    content.innerHTML=`
+      <div class="profile-header">
+        <div class="profile-avatar">${profile.username[0].toUpperCase()}</div>
+        <div>
+          <div class="profile-username">${profile.username}</div>
+          <div class="profile-meta">
+            ${profile.twitter_handle?`<a href="https://twitter.com/${profile.twitter_handle.replace('@','')}" target="_blank">${profile.twitter_handle}</a>`:''}
+            ${profile.discord_id?`<span>Discord: ${profile.discord_id}</span>`:''}
+            ${profile.wallet_address?`<span>${profile.wallet_address.slice(0,6)}...${profile.wallet_address.slice(-4)}</span>`:''}
+            <span>Joined ${new Date(profile.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Daily Votes — ${votes_remaining??10} remaining today</div>
+      <div class="vote-slots">${slots}</div>
+      <div style="font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:1rem;">MY <span style="color:var(--accent)">WANTED</span> CARDS</div>
+      ${votes?.length?`<div class="profile-cards-grid">${votes.map(v=>`
+        <div class="profile-card" onclick="fetchAndOpenCard('${v.card_id}')">
+          ${v.card_image?`<img src="${v.card_image}" alt="${v.card_name}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:100px">No image</div>`}
+          <div class="profile-card-info">
+            <div class="profile-card-name">${v.card_name}</div>
+            <div class="profile-card-set">${v.set_name||''}</div>
+          </div>
+        </div>`).join('')}</div>
+      `:`<div class="status-msg">No votes yet — search for cards and vote!</div>`}`;
+  }catch(e){content.innerHTML='<div class="status-msg">Error loading profile.</div>';}
+}
+
+async function fetchAndOpenCard(id){
+  let card=cardCache[id];
+  if(!card){
+    try{const r=await fetch(`https://api.pokemontcg.io/v2/cards/${id}`);const d=await r.json();card=d.data;if(card)cardCache[id]=card;}catch(e){}
+  }
+  if(card)openCardModal(card);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.getElementById('search-btn').addEventListener('click',searchCards);
+document.getElementById('search-input').addEventListener('keydown',e=>e.key==='Enter'&&searchCards());
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCardModal();closeAuthModal();}});
+
+updateAuthUI();
+if(currentSession)loadMyVotes();
+renderLeaderboard();
 searchCards();
 </script>
 </body>
