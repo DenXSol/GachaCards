@@ -1,103 +1,1338 @@
-const { createClient } = require('@supabase/supabase-js');
-const crypto = require('crypto');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GachaCards — Most Wanted</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root {
+  --bg:#000;--surface:#0d0d0d;--surface2:#141414;--border:#1e1e1e;--border2:#2a2a2a;
+  --text:#fff;--muted:#555;--muted2:#888;--accent:#C8FF00;
+  --accent-dim:rgba(200,255,0,0.12);--accent-border:rgba(200,255,0,0.35);
+  --font-display:'Bebas Neue',sans-serif;--font-body:'Barlow',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;}
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+/* HEADER */
+header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;background:rgba(0,0,0,0.96);backdrop-filter:blur(10px);z-index:50;}
+.logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:0.08em;color:var(--text);display:flex;align-items:center;gap:6px;}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block;box-shadow:0 0 8px var(--accent);}
+.header-right{display:flex;align-items:center;gap:8px;}
+nav{display:flex;gap:2px;}
+nav button{background:none;border:none;color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:6px 16px;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-transform:uppercase;}
+nav button:hover{color:var(--text);background:var(--surface2);}
+nav button.active{color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);}
+.nav-play-btn{background:var(--accent);color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:opacity 0.15s;white-space:nowrap;}
+.nav-play-btn:hover{opacity:0.85;}
 
-const MAX_ACCOUNTS_PER_IP = 3;
+/* PRICE */
+.price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
+.price-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.price-val{font-family:var(--font-display);font-size:1.4rem;color:var(--accent);letter-spacing:0.04em;}
+.price-source{font-size:10px;color:var(--muted);margin-bottom:12px;}
+.price-source a{color:var(--muted2);text-decoration:none;}
+.price-source a:hover{color:var(--accent);text-decoration:underline;}
+.voters-panel{width:200px;min-width:200px;border-left:1px solid var(--border2);padding:1rem;display:flex;flex-direction:column;gap:0;}
+.voters-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+.voter-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.voter-item:last-child{border-bottom:none;}
+.voter-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.voter-avatar img{width:100%;height:100%;object-fit:cover;}
+.voter-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.voters-empty{font-size:12px;color:var(--muted);text-align:center;padding:1rem 0;}
 
-function hashIP(ip) {
-  return crypto.createHash('sha256').update(ip + 'gachacards_salt').digest('hex');
+/* EDIT PROFILE */
+.edit-profile-btn{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;margin-top:8px;}
+.edit-profile-btn:hover{color:var(--text);border-color:#444;}
+.edit-profile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.edit-profile-overlay.open{display:flex;}
+.edit-profile-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:2rem;position:relative;}
+.edit-profile-modal h3{font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:4px;}
+.edit-profile-modal p{font-size:12px;color:var(--muted2);margin-bottom:1.5rem;}
+.ep-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.ep-close:hover{color:var(--text);}
+.ep-field{margin-bottom:1rem;}
+.ep-field label{display:block;font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.ep-field input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;transition:border-color 0.15s;}
+.ep-field input:focus{border-color:#444;}
+.ep-field input::placeholder{color:var(--muted);}
+.ep-submit{width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;margin-top:0.5rem;}
+.ep-submit:hover{opacity:0.85;}
+.ep-error{font-size:13px;color:#ff5555;margin-top:0.8rem;text-align:center;min-height:18px;}
+
+/* VOTE COUNTER */
+.vote-counter{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted2);}
+.vote-counter span{font-family:var(--font-display);font-size:1.1rem;color:var(--accent);letter-spacing:0.04em;}
+.vote-counter.empty span{color:#ff4444;}
+
+/* AUTH BUTTONS */
+.btn-login{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.btn-login:hover{color:var(--text);}
+.btn-register{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.btn-register:hover{opacity:0.85;}
+.btn-logout{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;}
+.btn-logout:hover{color:var(--text);}
+.username-pill{font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;}
+.username-pill:hover{text-decoration:underline;}
+
+/* VIEWS */
+.view{display:none;padding:2rem;max-width:1280px;margin:0 auto;}
+.view.active{display:block;}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.page-header h1{font-family:var(--font-display);font-size:3.5rem;letter-spacing:0.06em;line-height:1;}
+.page-header h1 span{color:var(--accent);}
+.page-sub{font-size:12px;color:var(--muted2);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px;}
+
+/* STATS BAR */
+.stats-bar{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:fit-content;}
+.stat{padding:12px 28px;text-align:center;border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat-num{font-family:var(--font-display);font-size:2rem;color:var(--accent);letter-spacing:0.04em;line-height:1;}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:3px;}
+
+/* LEADERBOARD */
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.lb-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
+.lb-card:hover{transform:translateY(-3px);border-color:var(--border2);}
+.lb-card.top1{border-color:var(--accent);box-shadow:0 0 20px rgba(200,255,0,0.1);}
+.lb-card.top2{border-color:#aaa;}
+.lb-card.top3{border-color:#cd7f32;}
+.rank-badge{position:absolute;top:8px;left:8px;font-family:var(--font-display);font-size:1rem;background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);padding:1px 9px;border-radius:5px;letter-spacing:0.06em;z-index:2;border:1px solid rgba(255,255,255,0.08);}
+.top1 .rank-badge{color:var(--accent);border-color:var(--accent-border);}
+.top2 .rank-badge{color:#aaa;}
+.top3 .rank-badge{color:#cd7f32;}
+.lb-card:not(.top1):not(.top2):not(.top3) .rank-badge{color:var(--muted2);}
+.lb-card img{width:100%;display:block;}
+.lb-card-info{padding:10px 12px 12px;}
+.lb-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-card-set{font-size:10px;color:var(--muted2);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-vote-row{display:flex;align-items:center;justify-content:space-between;}
+.vote-count{font-family:var(--font-display);font-size:1.6rem;color:var(--accent);letter-spacing:0.04em;line-height:1;}
+.vote-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+.vote-btn-lb{background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);font-size:16px;width:34px;height:34px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.vote-btn-lb:hover{background:rgba(200,255,0,0.22);}
+.vote-btn-lb.voted{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+
+/* SEARCH */
+.search-row{display:flex;gap:8px;max-width:560px;margin-bottom:1.5rem;}
+.search-row input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:15px;font-weight:500;padding:11px 16px;border-radius:8px;outline:none;transition:border-color 0.15s;}
+.search-row input::placeholder{color:var(--muted);}
+.search-row input:focus{border-color:#333;}
+.search-row button{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 24px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.search-row button:hover{opacity:0.88;}
+.search-count{font-size:12px;color:var(--muted2);margin-bottom:1.5rem;}
+.search-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
+.s-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.s-card.voted-card{border-color:var(--accent-border);}
+.s-card img{width:100%;display:block;}
+.s-card-body{padding:8px 10px 10px;}
+.s-card-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-card-set{font-size:10px;color:var(--muted2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.s-card-footer{display:flex;align-items:center;gap:6px;}
+.s-vote-count{font-size:11px;color:var(--muted2);min-width:40px;}
+.s-vote-btn{flex:1;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:11px;font-weight:600;padding:5px 0;border-radius:6px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.s-vote-btn:hover{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
+.s-vote-btn.voted{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
+
+/* PROFILE */
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;color:var(--accent);flex-shrink:0;}
+.profile-username{font-family:var(--font-display);font-size:2.5rem;letter-spacing:0.06em;line-height:1;}
+.profile-meta{display:flex;gap:1rem;margin-top:6px;flex-wrap:wrap;}
+.profile-meta span{font-size:11px;color:var(--muted2);}
+.profile-meta a{font-size:11px;color:var(--accent);text-decoration:none;}
+.profile-meta a:hover{text-decoration:underline;}
+.vote-slots{display:flex;gap:6px;margin-bottom:2rem;flex-wrap:wrap;}
+.vote-slot{width:36px;height:36px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.vote-slot.used{border-color:var(--accent-border);background:var(--accent-dim);color:var(--accent);}
+.vote-slot.empty{color:var(--muted);}
+.profile-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+.profile-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color 0.15s,transform 0.15s;}
+.profile-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.profile-card img{width:100%;display:block;}
+.profile-card-info{padding:8px 10px;}
+.profile-card-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-card-set{font-size:10px;color:var(--muted2);}
+
+/* CARD MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.card-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;display:flex;position:relative;}
+.card-modal-img{width:280px;min-width:280px;padding:1.5rem;}
+.card-modal-img img{width:100%;border-radius:10px;}
+.card-modal-body{flex:1;padding:1.5rem 1.5rem 1.5rem 0;}
+.card-modal-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;}
+.card-modal-close:hover{color:var(--text);}
+.card-modal-name{font-family:var(--font-display);font-size:2rem;letter-spacing:0.05em;line-height:1;margin-bottom:4px;}
+.card-modal-set{font-size:12px;color:var(--muted2);margin-bottom:1.2rem;}
+.card-detail-row{display:flex;gap:8px;margin-bottom:0.6rem;align-items:baseline;}
+.card-detail-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;min-width:70px;}
+.card-detail-val{font-size:13px;color:var(--text);font-weight:500;}
+.attack-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;margin-top:8px;}
+.attack-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.attack-name{font-size:13px;font-weight:700;color:var(--text);}
+.attack-damage{font-family:var(--font-display);font-size:1.2rem;color:var(--accent);letter-spacing:0.04em;}
+.attack-cost{font-size:11px;color:var(--muted2);margin-bottom:4px;}
+.attack-text{font-size:12px;color:var(--muted2);line-height:1.5;}
+.divider{height:1px;background:var(--border);margin:1rem 0;}
+.modal-vote-btn{margin-top:0.5rem;width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.modal-vote-btn:hover{opacity:0.85;}
+.modal-vote-btn.voted{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);}
+.modal-vote-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* AUTH MODAL */
+.auth-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.auth-overlay.open{display:flex;}
+.auth-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:2rem;position:relative;max-height:90vh;overflow-y:auto;}
+.auth-modal h2{font-family:var(--font-display);font-size:2rem;letter-spacing:0.06em;margin-bottom:4px;}
+.auth-modal p{font-size:13px;color:var(--muted2);margin-bottom:1.5rem;}
+.auth-tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--surface2);border-radius:8px;padding:3px;}
+.auth-tab{flex:1;background:none;border:none;color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:7px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;}
+.auth-tab.active{background:var(--bg);color:var(--text);}
+.auth-field{margin-bottom:1rem;}
+.auth-field label{display:block;font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;}
+.auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;transition:border-color 0.15s;}
+.auth-field input:focus{border-color:#444;}
+.auth-field input::placeholder{color:var(--muted);}
+.auth-optional{font-size:10px;color:var(--muted);margin-left:4px;}
+.auth-submit{width:100%;background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:12px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;margin-top:0.5rem;}
+.auth-submit:hover{opacity:0.85;}
+.auth-submit:disabled{opacity:0.5;cursor:not-allowed;}
+.auth-error{font-size:13px;color:#ff5555;margin-top:0.8rem;text-align:center;min-height:18px;}
+.auth-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.auth-close:hover{color:var(--text);}
+
+/* AUTOCOMPLETE */
+.search-wrap{position:relative;flex:1;}
+.autocomplete-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:0 0 10px 10px;z-index:100;max-height:240px;overflow-y:auto;display:none;}
+.autocomplete-dropdown.open{display:block;}
+.autocomplete-item{padding:9px 16px;font-size:14px;color:var(--text);cursor:pointer;transition:background 0.1s;}
+.autocomplete-item:hover,.autocomplete-item.selected{background:var(--surface2);color:var(--accent);}
+.autocomplete-item span{color:var(--accent);}
+
+/* SETS */
+.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.set-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.15s,transform 0.15s;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
+.set-card:hover{border-color:var(--accent-border);transform:translateY(-2px);}
+.set-card img{height:60px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.set-card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.set-card-meta{font-size:10px;color:var(--muted2);}
+.set-back-btn{background:none;border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:1.5rem;display:inline-flex;align-items:center;gap:6px;}
+.set-back-btn:hover{color:var(--text);border-color:#444;}
+.set-filter-row{display:flex;gap:8px;max-width:400px;margin-bottom:1.5rem;}
+.set-filter-row input{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:9px 14px;border-radius:8px;outline:none;}
+.set-filter-row input:focus{border-color:#333;}
+.set-filter-row input::placeholder{color:var(--muted);}
+
+/* MISC */
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:2rem;color:var(--accent);flex-shrink:0;overflow:hidden;cursor:pointer;position:relative;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.profile-avatar-wrap{position:relative;flex-shrink:0;}
+.profile-avatar-wrap:hover .avatar-edit-hint{opacity:1;}
+.avatar-edit-hint{position:absolute;inset:0;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;opacity:0;transition:opacity 0.15s;cursor:pointer;}
+.avatar-picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;align-items:center;justify-content:center;padding:1rem;}
+.avatar-picker-overlay.open{display:flex;}
+.avatar-picker-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;max-width:700px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;position:relative;}
+.avatar-picker-title{font-family:var(--font-display);font-size:1.6rem;letter-spacing:0.06em;margin-bottom:4px;}
+.avatar-picker-sub{font-size:12px;color:var(--muted2);margin-bottom:1.2rem;}
+.avatar-picker-close{position:absolute;top:12px;right:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);width:30px;height:30px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.avatar-picker-close:hover{color:var(--text);}
+.avatar-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:1rem;}
+.avatar-card-option{border:2px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all 0.15s;}
+.avatar-card-option:hover{border-color:var(--accent);transform:translateY(-2px);}
+.avatar-card-option img{width:100%;display:block;}
+.avatar-card-option p{font-size:10px;color:var(--muted2);padding:5px 8px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-msg{text-align:center;padding:4rem 0;color:var(--muted);font-size:14px;}
+.no-img-placeholder{height:130px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;padding:10px 22px;border-radius:8px;z-index:300;transition:transform 0.25s ease;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:600px){
+  .card-modal{flex-direction:column;}
+  .card-modal-img{width:100%;min-width:unset;padding:1rem 1rem 0;}
+  .card-modal-body{padding:1rem;}
+  .page-header{flex-direction:column;align-items:flex-start;gap:1rem;}
+  header{padding:0 1rem;}
+  nav button{padding:6px 10px;font-size:11px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:36px;width:auto;display:block;"/></div>
+  <nav>
+    <button class="active" onclick="showView('leaderboard',this)">Most Wanted</button>
+    <button onclick="showView('search',this)">Search Cards</button>
+    <button onclick="showView('sets',this)">Browse Sets</button>
+    <button id="nav-profile" style="display:none" onclick="showView('profile',this)">My Profile</button>
+    <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">🎴 Play Gacha</a>
+  </nav>
+  <div class="header-right" id="header-auth">
+    <button class="btn-login" onclick="openAuth('login')">Log In</button>
+    <button class="btn-register" onclick="openAuth('register')">Sign Up</button>
+  </div>
+  <div class="header-right" id="header-user" style="display:none">
+    <div class="vote-counter" id="vote-counter"><span id="votes-left">10</span>&nbsp;votes left</div>
+    <span class="username-pill" id="header-username" onclick="showView('profile',document.getElementById('nav-profile'))"></span>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<!-- LEADERBOARD -->
+<div class="view active" id="view-leaderboard">
+  <div class="page-header">
+    <div>
+      <h1>MOST <span>WANTED</span></h1>
+      <div class="page-sub">Community voted · Top cards your customers want</div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="stat-cards">—</div><div class="stat-label">Cards</div></div>
+      <div class="stat"><div class="stat-num" id="stat-votes">—</div><div class="stat-label">Votes</div></div>
+      <div class="stat"><div class="stat-num" id="stat-pokemon">—</div><div class="stat-label">Pokémon</div></div>
+    </div>
+  </div>
+  <div class="lb-grid" id="lb-grid"></div>
+</div>
+
+<!-- SEARCH -->
+<div class="view" id="view-search">
+  <div class="page-header">
+    <div>
+      <h1>FIND <span>CARDS</span></h1>
+      <div class="page-sub">Search any Pokémon · Vote on cards you want</div>
+    </div>
+  </div>
+  <div class="search-row">
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Pokémon name (e.g. Charizard)..." autocomplete="off"/>
+      <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+    </div>
+    <button id="search-btn">Search</button>
+  </div>
+  <div id="search-count" class="search-count"></div>
+  <div class="search-grid" id="search-grid"></div>
+  <div id="search-status" class="status-msg">Search for a Pokémon to see all their cards</div>
+</div>
+
+<!-- BROWSE SETS -->
+<div class="view" id="view-sets">
+  <div id="sets-list-view">
+    <div class="page-header">
+      <div>
+        <h1>BROWSE <span>SETS</span></h1>
+        <div class="page-sub">All Pokémon TCG sets · Newest first</div>
+      </div>
+    </div>
+    <div class="sets-grid" id="sets-grid"></div>
+    <div id="sets-status" class="status-msg">Loading sets...</div>
+  </div>
+  <div id="set-detail-view" style="display:none">
+    <button class="set-back-btn" onclick="backToSets()">← Back to Sets</button>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <img id="set-detail-logo" src="" alt="" style="height:50px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5))"/>
+        <div>
+          <h1 id="set-detail-name" style="font-family:var(--font-display);font-size:2.5rem;letter-spacing:0.06em;line-height:1;">SET <span style="color:var(--accent)">NAME</span></h1>
+          <div class="page-sub" id="set-detail-meta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="set-filter-row">
+      <input type="text" id="set-filter-input" placeholder="Filter by Pokémon name within this set..." autocomplete="off"/>
+    </div>
+    <div class="search-count" id="set-card-count"></div>
+    <div class="search-grid" id="set-cards-grid"></div>
+    <div id="set-cards-status" class="status-msg"></div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="view" id="view-profile">
+  <div id="profile-content"><div class="status-msg">Loading profile...</div></div>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="card-modal-overlay" onclick="closeCardModal(event)">
+  <div class="card-modal">
+    <button class="card-modal-close" onclick="closeCardModal()">✕</button>
+    <div class="card-modal-img"><img id="cm-img" src="" alt=""/></div>
+    <div class="card-modal-body">
+      <div class="card-modal-name" id="cm-name"></div>
+      <div class="card-modal-set" id="cm-set"></div>
+      <div class="card-detail-row"><span class="card-detail-label">HP</span><span class="card-detail-val" id="cm-hp"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Type</span><span class="card-detail-val" id="cm-type"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Rarity</span><span class="card-detail-val" id="cm-rarity"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Artist</span><span class="card-detail-val" id="cm-artist"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Weakness</span><span class="card-detail-val" id="cm-weakness"></span></div>
+      <div class="card-detail-row"><span class="card-detail-label">Retreat</span><span class="card-detail-val" id="cm-retreat"></span></div>
+      <div id="cm-attacks"></div>
+      <div class="divider"></div>
+      <div id="cm-price"></div>
+      <div id="cm-vote-count" style="font-size:13px;color:var(--muted2);margin-bottom:10px;"></div>
+      <button class="modal-vote-btn" id="cm-vote-btn" onclick="modalVote()"></button>
+    </div>
+    <div class="voters-panel">
+      <div class="voters-title">Who Wants This</div>
+      <div id="voters-list"><div class="voters-empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="closeAuthModal(event)">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuthModal()">✕</button>
+    <img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:40px;width:auto;display:block;margin-bottom:8px;"/>
+    <p>Join to vote on the cards you want</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Sign Up</button>
+    </div>
+    <div id="form-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="l-email" placeholder="your@email.com"/></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="l-password" placeholder="••••••••"/></div>
+      <button class="auth-submit" id="login-btn" onclick="doLogin()">Log In</button>
+      <div class="auth-error" id="login-error"></div>
+    </div>
+    <div id="form-register" style="display:none">
+      <div class="auth-field"><label>Username</label><input type="text" id="r-username" placeholder="YourUsername"/></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="r-email" placeholder="your@email.com"/></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="r-password" placeholder="Min 6 characters"/></div>
+      <div class="auth-field"><label>Discord ID <span class="auth-optional">(optional)</span></label><input type="text" id="r-discord" placeholder="YourDiscord#1234"/></div>
+      <div class="auth-field"><label>Twitter <span class="auth-optional">(optional)</span></label><input type="text" id="r-twitter" placeholder="@YourHandle"/></div>
+      <div class="auth-field"><label>Wallet Address <span class="auth-optional">(optional)</span></label><input type="text" id="r-wallet" placeholder="Solana wallet"/></div>
+      <button class="auth-submit" id="register-btn" onclick="doRegister()">Create Account</button>
+      <div class="auth-error" id="register-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="edit-profile-overlay" id="edit-profile-overlay" onclick="closeEditProfile(event)">
+  <div class="edit-profile-modal">
+    <button class="ep-close" onclick="closeEditProfile()">✕</button>
+    <h3>EDIT <span style="color:var(--accent)">PROFILE</span></h3>
+    <p>Update your social links and wallet</p>
+    <div class="ep-field"><label>Twitter / X</label><input type="text" id="ep-twitter" placeholder="@YourHandle"/></div>
+    <div class="ep-field"><label>Discord ID</label><input type="text" id="ep-discord" placeholder="YourDiscord#1234"/></div>
+    <div class="ep-field"><label>Wallet Address</label><input type="text" id="ep-wallet" placeholder="Solana wallet"/></div>
+    <button class="ep-submit" onclick="saveProfile()">Save Changes</button>
+    <div class="ep-error" id="ep-error"></div>
+  </div>
+</div>
+
+<!-- AVATAR PICKER -->
+<div class="avatar-picker-overlay" id="avatar-picker-overlay" onclick="closeAvatarPicker(event)">
+  <div class="avatar-picker-modal">
+    <button class="avatar-picker-close" onclick="closeAvatarPicker()">✕</button>
+    <div class="avatar-picker-title">CHOOSE <span style="color:var(--accent)">AVATAR</span></div>
+    <div class="avatar-picker-sub">Click a card from your wanted list to set it as your profile image</div>
+    <div class="avatar-card-grid" id="avatar-card-grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────
+let currentUser = JSON.parse(localStorage.getItem('gc_user')||'null');
+let currentSession = localStorage.getItem('gc_session')||null;
+let myVotedIds = new Set();
+let cardCache = {};
+let globalVoteCounts = {};
+let currentModalCard = null;
+let votesRemaining = 10;
+
+// ── TOAST ─────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+// ── AUTH UI ───────────────────────────────────────────────────────
+function updateAuthUI(){
+  const loggedIn=!!currentUser;
+  document.getElementById('header-auth').style.display=loggedIn?'none':'flex';
+  document.getElementById('header-user').style.display=loggedIn?'flex':'none';
+  document.getElementById('nav-profile').style.display=loggedIn?'block':'none';
+  if(loggedIn){
+    document.getElementById('header-username').textContent=currentUser.username;
+    updateVoteCounter();
+  }
+}
+
+function updateVoteCounter(){
+  const el=document.getElementById('vote-counter');
+  document.getElementById('votes-left').textContent=votesRemaining;
+  el.classList.toggle('empty',votesRemaining===0);
+}
+
+function openAuth(tab){
+  document.getElementById('auth-overlay').classList.add('open');
+  switchTab(tab);
+}
+
+function closeAuthModal(e){
+  if(!e||e.target===document.getElementById('auth-overlay')){
+    document.getElementById('auth-overlay').classList.remove('open');
+    document.getElementById('login-error').textContent='';
+    document.getElementById('register-error').textContent='';
+  }
+}
+
+function switchTab(tab){
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-register').style.display=tab==='register'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-register').classList.toggle('active',tab==='register');
+}
+
+// ── AUTH ACTIONS ──────────────────────────────────────────────────
+async function doLogin(){
+  const btn=document.getElementById('login-btn');
+  const errEl=document.getElementById('login-error');
+  btn.disabled=true;btn.textContent='Logging in...';errEl.textContent='';
+  try{
+    const res=await fetch('/api/auth',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'login',email:document.getElementById('l-email').value.trim(),password:document.getElementById('l-password').value})
+    });
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    currentUser=data.user;
+    currentSession=data.session?.access_token;
+    localStorage.setItem('gc_user',JSON.stringify(data.user));
+    localStorage.setItem('gc_session',currentSession);
+    if(data.session?.refresh_token) localStorage.setItem('gc_refresh_token', data.session.refresh_token);
+    closeAuthModal();updateAuthUI();
+    await loadMyVotes();
+    showToast('Welcome back, '+data.user.username+'!');
+    renderLeaderboard();
+  }catch(e){errEl.textContent='Network error. Try again.';}
+  finally{btn.disabled=false;btn.textContent='Log In';}
+}
+
+async function doRegister(){
+  const btn=document.getElementById('register-btn');
+  const errEl=document.getElementById('register-error');
+  btn.disabled=true;btn.textContent='Creating account...';errEl.textContent='';
+  const username=document.getElementById('r-username').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const password=document.getElementById('r-password').value;
+  if(!username||!email||!password){errEl.textContent='Username, email and password are required.';btn.disabled=false;btn.textContent='Create Account';return;}
+  try{
+    const res=await fetch('/api/auth',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'register',username,email,password,
+        discord_id:document.getElementById('r-discord').value.trim()||null,
+        twitter_handle:document.getElementById('r-twitter').value.trim()||null,
+        wallet_address:document.getElementById('r-wallet').value.trim()||null})
+    });
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+
+    if(data.autoLogin && data.session){
+      // Logged in automatically — same flow as doLogin
+      currentUser=data.user;
+      currentSession=data.session.access_token;
+      localStorage.setItem('gc_user',JSON.stringify(data.user));
+      localStorage.setItem('gc_session',currentSession);
+      if(data.session?.refresh_token) localStorage.setItem('gc_refresh_token', data.session.refresh_token);
+      closeAuthModal();
+      updateAuthUI();
+      await loadMyVotes();
+      showToast('Welcome to GachaCards, '+data.user.username+'! 🎴');
+      renderLeaderboard();
+    } else {
+      // Fallback — ask to log in manually
+      errEl.style.color='var(--accent)';
+      errEl.textContent='Account created! Please log in.';
+      setTimeout(()=>switchTab('login'),1500);
+    }
+  }catch(e){errEl.textContent='Network error. Try again.';}
+  finally{btn.disabled=false;btn.textContent='Create Account';}
+}
+
+function logout(){
+  currentUser=null;currentSession=null;myVotedIds=new Set();votesRemaining=10;
+  localStorage.removeItem('gc_user');localStorage.removeItem('gc_session');localStorage.removeItem('gc_refresh_token');
+  updateAuthUI();showToast('Logged out.');
+  showView('leaderboard',document.querySelector('nav button'));
+  renderLeaderboard();
+}
+
+// ── LOAD MY VOTES ─────────────────────────────────────────────────
+async function loadMyVotes(){
+  if(!currentSession)return;
+  try{
+    const res=await fetch('/api/vote',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:'my_votes'})
+    });
+    const data=await res.json();
+    if(res.ok){
+      myVotedIds=new Set((data.votes||[]).map(v=>v.card_id));
+      votesRemaining=data.votes_remaining??10;
+      updateVoteCounter();
+    }
+  }catch(e){}
+}
+
+// ── LOAD GLOBAL LEADERBOARD ───────────────────────────────────────
+async function loadLeaderboard(){
+  try{
+    const res=await fetch('/api/vote');
+    const data=await res.json();
+    if(res.ok&&data.cards){
+      globalVoteCounts={};
+      data.cards.forEach(c=>{
+        globalVoteCounts[c.card_id]={count:parseInt(c.total_votes),name:c.card_name,set:c.set_name,image:c.card_image};
+      });
+    }
+  }catch(e){}
+}
+
+// ── VIEW SWITCHER ─────────────────────────────────────────────────
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='leaderboard')renderLeaderboard();
+  if(name==='profile')renderProfile();
+  if(name==='sets')renderSets();
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────────
+async function renderLeaderboard(){
+  const grid=document.getElementById('lb-grid');
+  grid.innerHTML='<div class="status-msg">Loading...</div>';
+  await loadLeaderboard();
+
+  // fetch images for top cards
+  const topIds=Object.entries(globalVoteCounts).sort((a,b)=>b[1].count-a[1].count).slice(0,50).map(([id])=>id);
+  await Promise.allSettled(topIds.filter(id=>!cardCache[id]).map(async id=>{
+    try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();if(d.data)cardCache[id]=d.data;}catch(e){}
+  }));
+
+  const allCards=Object.entries(globalVoteCounts)
+    .map(([id,info])=>({id,count:info.count,card:cardCache[id],info}))
+    .filter(c=>c.count>0)
+    .sort((a,b)=>b.count-a.count);
+
+  const totalVotes=allCards.reduce((s,c)=>s+c.count,0);
+  const uniquePokemon=new Set(allCards.map(c=>c.card?.name?.split(' ')[0]).filter(Boolean)).size;
+  document.getElementById('stat-cards').textContent=allCards.length||'—';
+  document.getElementById('stat-votes').textContent=totalVotes||'—';
+  document.getElementById('stat-pokemon').textContent=uniquePokemon||'—';
+
+  grid.innerHTML='';
+  if(!allCards.length){grid.innerHTML='<div class="status-msg">No votes yet — search cards and be the first to vote!</div>';return;}
+
+  allCards.forEach(({id,count,card,info},i)=>{
+    const rankClass=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const img=card?.images?.small||info.image||'';
+    const name=card?.name||info.name||'Unknown';
+    const set=card?.set?.name||info.set||'';
+    const voted=myVotedIds.has(id);
+
+    const el=document.createElement('div');
+    el.className=`lb-card ${rankClass}`;
+    el.innerHTML=`
+      <div class="rank-badge">#${i+1}</div>
+      ${img?`<img src="${img}" alt="${name}" loading="lazy"/>`:`<div class="no-img-placeholder">No image</div>`}
+      <div class="lb-card-info">
+        <div class="lb-card-name">${name}</div>
+        <div class="lb-card-set">${set} · #${card?.number||'?'}</div>
+        <div class="lb-vote-row">
+          <div><div class="vote-count">${count}</div><div class="vote-label">wants</div></div>
+          <button class="vote-btn-lb ${voted?'voted':''}">${voted?'✦':'✧'}</button>
+        </div>
+      </div>`;
+
+    el.addEventListener('click',(e)=>{
+      if(e.target.classList.contains('vote-btn-lb'))return;
+      if(card)openCardModal(card);
+    });
+    el.querySelector('.vote-btn-lb').addEventListener('click',async(e)=>{
+      e.stopPropagation();
+      await castVote(id,card||{name,set:{name:set},number:card?.number,images:{small:img}});
+      renderLeaderboard();
+    });
+    grid.appendChild(el);
+  });
+}
+
+// ── CAST VOTE ─────────────────────────────────────────────────────
+async function castVote(id,card){
+  if(!currentUser){openAuth('login');showToast('Log in to vote!');return;}
+  const isVoted=myVotedIds.has(id);
+  if(!isVoted&&votesRemaining<=0){showToast('No votes left today! Come back tomorrow.');return;}
+
+  try{
+    const res=await fetch('/api/vote',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:isVoted?'unvote':'vote',card_id:id,card_name:card?.name||'',set_name:card?.set?.name||'',card_image:card?.images?.small||''})
+    });
+    const data=await res.json();
+    if(!res.ok){showToast(data.error);return;}
+
+    if(isVoted){
+      myVotedIds.delete(id);votesRemaining=Math.min(10,votesRemaining+1);
+      if(globalVoteCounts[id])globalVoteCounts[id].count=Math.max(0,globalVoteCounts[id].count-1);
+      showToast('Vote removed');
+    }else{
+      myVotedIds.add(id);votesRemaining=data.votes_remaining??votesRemaining-1;
+      if(!globalVoteCounts[id])globalVoteCounts[id]={count:0,name:card?.name,set:card?.set?.name,image:card?.images?.small};
+      globalVoteCounts[id].count++;
+      showToast('✦ Added to Most Wanted!');
+    }
+    updateVoteCounter();
+    if(currentModalCard?.id===id)updateModalVoteBtn();
+  }catch(e){showToast('Error. Try again.');}
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────
+async function searchCards(){
+  const q=document.getElementById('search-input').value.trim();
+  if(!q)return;
+  const grid=document.getElementById('search-grid');
+  const status=document.getElementById('search-status');
+  const countEl=document.getElementById('search-count');
+  grid.innerHTML='';countEl.textContent='';
+  status.textContent='Searching...';status.style.display='block';
+  try{
+    const res=await fetch(`/api/pokemon?path=cards&q=name:"${encodeURIComponent(q)}"&orderBy=set.releaseDate&pageSize=250`);
+    const data=await res.json();
+    const cards=data.data||[];
+    status.style.display='none';
+    if(!cards.length){status.textContent='No cards found.';status.style.display='block';return;}
+    countEl.textContent=`${cards.length} card${cards.length!==1?'s':''} found for "${q}"`;
+    cards.forEach(card=>{cardCache[card.id]=card;renderSearchCard(card,grid);});
+  }catch(e){status.textContent='Error fetching cards. Try again.';status.style.display='block';}
+}
+
+function renderSearchCard(card,grid){
+  const id=card.id;
+  const count=globalVoteCounts[id]?.count||0;
+  const voted=myVotedIds.has(id);
+  const img=card.images?.small||'';
+
+  const el=document.createElement('div');
+  el.className=`s-card ${voted?'voted-card':''}`;
+  el.id=`sc-${id}`;
+  el.innerHTML=`
+    ${img?`<img src="${img}" alt="${card.name}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:110px">No image</div>`}
+    <div class="s-card-body">
+      <div class="s-card-name">${card.name}</div>
+      <div class="s-card-set">${card.set?.name||''} · #${card.number||'?'}</div>
+      <div class="s-card-footer">
+        <span class="s-vote-count" id="vc-${id}">${count>0?count+' want':''}</span>
+        <button class="s-vote-btn ${voted?'voted':''}" id="vb-${id}">${voted?'✦ Wanted':'✧ Want'}</button>
+      </div>
+    </div>`;
+
+  // click image area → open modal
+  el.querySelector('img, .no-img-placeholder')?.addEventListener('click',()=>openCardModal(card));
+  el.querySelector('.s-card-name')?.addEventListener('click',()=>openCardModal(card));
+
+  el.querySelector(`#vb-${id}`).addEventListener('click',async(e)=>{
+    e.stopPropagation();
+    await castVote(id,card);
+    const nowVoted=myVotedIds.has(id);
+    const newCount=globalVoteCounts[id]?.count||0;
+    const btn=document.getElementById(`vb-${id}`);
+    const vc=document.getElementById(`vc-${id}`);
+    const sc=document.getElementById(`sc-${id}`);
+    if(btn){btn.className=`s-vote-btn ${nowVoted?'voted':''}`;btn.textContent=nowVoted?'✦ Wanted':'✧ Want';}
+    if(vc)vc.textContent=newCount>0?newCount+' want':'';
+    if(sc){nowVoted?sc.classList.add('voted-card'):sc.classList.remove('voted-card');}
+  });
+  grid.appendChild(el);
+}
+
+// ── CARD MODAL ────────────────────────────────────────────────────
+function openCardModal(card){
+  currentModalCard=card;
+  document.getElementById('cm-img').src=card.images?.large||card.images?.small||'';
+  document.getElementById('cm-img').alt=card.name;
+  document.getElementById('cm-name').textContent=card.name;
+  document.getElementById('cm-set').textContent=`${card.set?.name||''} · #${card.number||'?'} · ${card.set?.releaseDate||''}`;
+  document.getElementById('cm-hp').textContent=card.hp||'—';
+  document.getElementById('cm-type').textContent=card.types?.join(', ')||'—';
+  document.getElementById('cm-rarity').textContent=card.rarity||'—';
+  document.getElementById('cm-artist').textContent=card.artist||'—';
+  document.getElementById('cm-weakness').textContent=card.weaknesses?.map(w=>w.type+' '+w.value).join(', ')||'—';
+  document.getElementById('cm-retreat').textContent=card.retreatCost?.length?'⬡'.repeat(card.retreatCost.length):'—';
+
+  const attacksEl=document.getElementById('cm-attacks');
+  if(card.attacks?.length){
+    attacksEl.innerHTML='<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin:12px 0 6px">Attacks</div>'+
+      card.attacks.map(a=>`
+        <div class="attack-item">
+          <div class="attack-header"><div class="attack-name">${a.name}</div><div class="attack-damage">${a.damage||''}</div></div>
+          <div class="attack-cost">${a.cost?.join(' · ')||''}</div>
+          ${a.text?`<div class="attack-text">${a.text}</div>`:''}
+        </div>`).join('');
+  }else{attacksEl.innerHTML='';}
+
+  const count=globalVoteCounts[card.id]?.count||0;
+  document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
+
+  // Price
+  const priceEl=document.getElementById('cm-price');
+  const tcgPrices=card.tcgplayer?.prices;
+  const cmPrices=card.cardmarket?.prices;
+  let priceHTML='';
+  if(tcgPrices){
+    const variant=tcgPrices.holofoil||tcgPrices.normal||tcgPrices.reverseHolofoil||tcgPrices['1stEditionHolofoil']||Object.values(tcgPrices)[0];
+    if(variant?.market){
+      const url=card.tcgplayer?.url||'https://www.tcgplayer.com';
+      priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">$${variant.market.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">TCGPlayer ↗</a> · ${card.tcgplayer?.updatedAt||''}</div>`;
+    }
+  } else if(cmPrices?.averageSellPrice){
+    const url=card.cardmarket?.url||'https://www.cardmarket.com';
+    priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">€${cmPrices.averageSellPrice.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">CardMarket ↗</a> · ${card.cardmarket?.updatedAt||''}</div>`;
+  }
+  priceEl.innerHTML=priceHTML;
+  updateModalVoteBtn();
+  document.getElementById('card-modal-overlay').classList.add('open');
+  // Load voters
+  loadVoters(card.id);
+}
+
+function updateModalVoteBtn(){
+  const id=currentModalCard?.id;if(!id)return;
+  const btn=document.getElementById('cm-vote-btn');
+  const voted=myVotedIds.has(id);
+  if(!currentUser){btn.textContent='Log in to vote';btn.className='modal-vote-btn';btn.disabled=false;}
+  else{
+    btn.textContent=voted?'✦ Remove from Wanted':'✧ Add to Most Wanted';
+    btn.className=`modal-vote-btn ${voted?'voted':''}`;
+    btn.disabled=!voted&&votesRemaining<=0;
+  }
+}
+
+function closeCardModal(e){
+  if(!e||e.target===document.getElementById('card-modal-overlay')){
+    document.getElementById('card-modal-overlay').classList.remove('open');
+    currentModalCard=null;
+  }
+}
+
+async function modalVote(){
+  if(!currentUser){closeCardModal();openAuth('login');return;}
+  if(!currentModalCard)return;
+  await castVote(currentModalCard.id,currentModalCard);
+  const count=globalVoteCounts[currentModalCard.id]?.count||0;
+  document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
+  updateModalVoteBtn();
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────
+async function renderProfile(){
+  if(!currentUser){showView('leaderboard',document.querySelector('nav button'));return;}
+  const content=document.getElementById('profile-content');
+  content.innerHTML='<div class="status-msg">Loading...</div>';
+  try{
+    const res=await fetch('/api/profile',{headers:{'Authorization':'Bearer '+currentSession}});
+    const data=await res.json();
+    if(!res.ok){content.innerHTML='<div class="status-msg">Could not load profile.</div>';return;}
+    const{profile,votes,votes_remaining}=data;
+    currentProfileData=profile;
+    currentProfileVotes=votes||[];
+    votesRemaining=votes_remaining??votesRemaining;updateVoteCounter();
+    const usedSlots=10-(votes_remaining??10);
+    const slots=Array.from({length:10},(_,i)=>
+      `<div class="vote-slot ${i<usedSlots?'used':'empty'}">${i<usedSlots?'✦':'○'}</div>`).join('');
+
+    content.innerHTML=`
+      <div class="profile-header">
+        <div class="profile-avatar-wrap" onclick="openAvatarPicker()">
+          <div class="profile-avatar" id="profile-avatar-el">
+            ${profile.avatar_card_image
+              ? `<img src="${profile.avatar_card_image}" alt="avatar"/>`
+              : `<span>${profile.username[0].toUpperCase()}</span>`}
+          </div>
+          <div class="avatar-edit-hint">Edit</div>
+        </div>
+        <div>
+          <div class="profile-username">${profile.username}</div>
+          <div class="profile-meta">
+            ${profile.twitter_handle?`<a href="https://twitter.com/${profile.twitter_handle.replace('@','')}" target="_blank">${profile.twitter_handle}</a>`:''}
+            ${profile.discord_id?`<span>Discord: ${profile.discord_id}</span>`:''}
+            ${profile.wallet_address?`<span>${profile.wallet_address.slice(0,6)}...${profile.wallet_address.slice(-4)}</span>`:''}
+            <span>Joined ${new Date(profile.created_at).toLocaleDateString()}</span>
+          </div>
+          <button class="edit-profile-btn" onclick="openEditProfile()">✎ Edit Profile</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Daily Votes — ${votes_remaining??10} remaining today</div>
+      <div class="vote-slots">${slots}</div>
+      <div style="font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:1rem;">MY <span style="color:var(--accent)">WANTED</span> CARDS</div>
+      ${votes?.length?`<div class="profile-cards-grid">${votes.map(v=>`
+        <div class="profile-card" onclick="fetchAndOpenCard('${v.card_id}')">
+          ${v.card_image?`<img src="${v.card_image}" alt="${v.card_name}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:100px">No image</div>`}
+          <div class="profile-card-info">
+            <div class="profile-card-name">${v.card_name}</div>
+            <div class="profile-card-set">${v.set_name||''}</div>
+          </div>
+        </div>`).join('')}</div>
+      `:`<div class="status-msg">No votes yet — search for cards and vote!</div>`}`;
+  }catch(e){content.innerHTML='<div class="status-msg">Error loading profile.</div>';}
+}
+
+async function fetchAndOpenCard(id){
+  let card=cardCache[id];
+  if(!card){
+    try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();card=d.data;if(card)cardCache[id]=card;}catch(e){}
+  }
+  if(card)openCardModal(card);
+}
+
+// ── VOTERS ────────────────────────────────────────────────────────
+async function loadVoters(cardId){
+  const list=document.getElementById('voters-list');
+  list.innerHTML='<div class="voters-empty">Loading...</div>';
+  try{
+    const res=await fetch(`/api/vote?card_id=${encodeURIComponent(cardId)}`);
+    const data=await res.json();
+    const voters=data.voters||[];
+    if(!voters.length){list.innerHTML='<div class="voters-empty">No votes yet</div>';return;}
+    list.innerHTML=voters.map(v=>{
+      const u=v.profiles;
+      const avatar=u?.avatar_card_image
+        ?`<img src="${u.avatar_card_image}" alt="${u.username}"/>`
+        :`<span>${(u?.username||'?')[0].toUpperCase()}</span>`;
+      return `<div class="voter-item">
+        <div class="voter-avatar">${avatar}</div>
+        <div class="voter-name">${u?.username||'Unknown'}</div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML='<div class="voters-empty">Could not load</div>';}
+}
+
+// ── EDIT PROFILE ──────────────────────────────────────────────────
+let currentProfileData = null;
+
+function openEditProfile(){
+  if(!currentProfileData)return;
+  document.getElementById('ep-twitter').value=currentProfileData.twitter_handle||'';
+  document.getElementById('ep-discord').value=currentProfileData.discord_id||'';
+  document.getElementById('ep-wallet').value=currentProfileData.wallet_address||'';
+  document.getElementById('ep-error').textContent='';
+  document.getElementById('edit-profile-overlay').classList.add('open');
+}
+
+function closeEditProfile(e){
+  if(!e||e.target===document.getElementById('edit-profile-overlay')){
+    document.getElementById('edit-profile-overlay').classList.remove('open');
+  }
+}
+
+async function saveProfile(){
+  const btn=document.querySelector('.ep-submit');
+  const errEl=document.getElementById('ep-error');
+  btn.disabled=true;btn.textContent='Saving...';errEl.textContent='';
+  try{
+    const res=await fetch('/api/profile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({
+        action:'update_profile',
+        twitter_handle:document.getElementById('ep-twitter').value.trim()||null,
+        discord_id:document.getElementById('ep-discord').value.trim()||null,
+        wallet_address:document.getElementById('ep-wallet').value.trim()||null,
+      })
+    });
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    closeEditProfile();
+    showToast('✦ Profile updated!');
+    renderProfile(); // refresh profile page
+  }catch(e){errEl.textContent='Error saving. Try again.';}
+  finally{btn.disabled=false;btn.textContent='Save Changes';}
+}
+
+// ── AVATAR PICKER ─────────────────────────────────────────────────
+let currentProfileVotes = [];
+
+function openAvatarPicker(){
+  if(!currentUser)return;
+  const grid=document.getElementById('avatar-card-grid');
+  grid.innerHTML='';
+
+  if(!currentProfileVotes.length){
+    grid.innerHTML='<div class="status-msg" style="padding:2rem">Vote on cards first to use them as your avatar!</div>';
+  } else {
+    currentProfileVotes.forEach(v=>{
+      if(!v.card_image)return;
+      const el=document.createElement('div');
+      el.className='avatar-card-option';
+      el.innerHTML=`<img src="${v.card_image}" alt="${v.card_name}"/><p>${v.card_name}</p>`;
+      el.addEventListener('click',()=>setAvatar(v.card_image));
+      grid.appendChild(el);
+    });
+  }
+  document.getElementById('avatar-picker-overlay').classList.add('open');
+}
+
+function closeAvatarPicker(e){
+  if(!e||e.target===document.getElementById('avatar-picker-overlay')){
+    document.getElementById('avatar-picker-overlay').classList.remove('open');
+  }
+}
+
+async function setAvatar(imageUrl){
+  try{
+    const res=await fetch('/api/profile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+currentSession},
+      body:JSON.stringify({action:'set_avatar',avatar_card_image:imageUrl})
+    });
+    if(res.ok){
+      // Update avatar in UI immediately
+      const avatarEl=document.getElementById('profile-avatar-el');
+      if(avatarEl) avatarEl.innerHTML=`<img src="${imageUrl}" alt="avatar"/>`;
+      closeAvatarPicker();
+      showToast('✦ Profile image updated!');
+    }
+  }catch(e){showToast('Error updating avatar.');}
+}
+
+// ── BROWSE SETS ───────────────────────────────────────────────────
+let allSets = [];
+let currentSetCards = [];
+let setsLoaded = false;
+
+async function renderSets() {
+  if (setsLoaded && allSets.length) { showSetsList(); return; }
+  const grid = document.getElementById('sets-grid');
+  const status = document.getElementById('sets-status');
+  grid.innerHTML = ''; status.textContent = 'Loading sets...'; status.style.display = 'block';
 
   try {
-    const { action, email, password, username, discord_id, twitter_handle, wallet_address } = req.body;
-
-    if (action === 'register') {
-      const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
-      const ip_hash = hashIP(ip);
-
-      // Check how many accounts already exist from this IP
-      const { data: existingIPs } = await supabase
-        .from('ip_registry').select('user_id').eq('ip_hash', ip_hash);
-      if (existingIPs && existingIPs.length >= MAX_ACCOUNTS_PER_IP) {
-        return res.status(400).json({ error: `Maximum ${MAX_ACCOUNTS_PER_IP} accounts allowed per network.` });
-      }
-
-      // Check username not taken
-      const { data: existingUsername } = await supabase
-        .from('profiles').select('id').eq('username', username).maybeSingle();
-      if (existingUsername) return res.status(400).json({ error: 'Username already taken.' });
-
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
-      if (authError) return res.status(400).json({ error: authError.message });
-
-      const userId = authData.user.id;
-
-      // Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: userId, username,
-        discord_id: discord_id || null,
-        twitter_handle: twitter_handle || null,
-        wallet_address: wallet_address || null,
-        ip_hash,
-      });
-      if (profileError) return res.status(400).json({ error: profileError.message });
-
-      // Register IP (allow multiple rows per IP now)
-      await supabase.from('ip_registry').insert({ ip_hash, user_id: userId });
-
-      // Auto login after register — sign in immediately to get session
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (loginError) {
-        // Account created but auto-login failed — ask them to log in manually
-        return res.status(200).json({
-          message: 'Account created! Please log in.',
-          autoLogin: false,
-          user: { id: userId, username, email },
-        });
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles').select('*').eq('id', userId).single();
-
-      return res.status(200).json({
-        message: 'Account created!',
-        autoLogin: true,
-        session: loginData.session,
-        user: { ...profile, email },
-      });
-    }
-
-    if (action === 'login') {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      if (authError) return res.status(400).json({ error: 'Invalid email or password.' });
-
-      const { data: profile } = await supabase
-        .from('profiles').select('*').eq('id', authData.user.id).single();
-
-      return res.status(200).json({
-        message: 'Logged in!',
-        session: authData.session,
-        user: { ...profile, email: authData.user.email },
-      });
-    }
-
-    return res.status(400).json({ error: 'Invalid action.' });
-
-  } catch (err) {
-    console.error('Auth error:', err);
-    return res.status(500).json({ error: err.message || 'Server error' });
+    const res = await fetch('/api/pokemon?path=sets&orderBy=-releaseDate&pageSize=250');
+    const data = await res.json();
+    allSets = data.data || [];
+    setsLoaded = true;
+    status.style.display = 'none';
+    renderSetsGrid(allSets);
+  } catch(e) {
+    status.textContent = 'Error loading sets. Try again.';
   }
-};
+}
+
+function renderSetsGrid(sets) {
+  const grid = document.getElementById('sets-grid');
+  grid.innerHTML = '';
+  sets.forEach(set => {
+    const el = document.createElement('div');
+    el.className = 'set-card';
+    el.innerHTML = `
+      ${set.images?.logo
+        ? `<div class="set-logo-wrap"><img src="${set.images.logo}" alt="${set.name}" loading="lazy"/></div>`
+        : `<div class="set-logo-wrap set-logo-placeholder">${set.name[0]}</div>`}
+      <div class="set-card-info">
+        <div class="set-card-name">${set.name}</div>
+        <div class="set-card-meta">${set.releaseDate?.slice(0,4) || ''} · ${set.total || set.printedTotal || '?'} cards</div>
+      </div>`;
+    el.addEventListener('click', () => openSet(set));
+    grid.appendChild(el);
+  });
+}
+
+function showSetsList() {
+  document.getElementById('sets-list-view').style.display = 'block';
+  document.getElementById('set-detail-view').style.display = 'none';
+}
+
+function backToSets() {
+  showSetsList();
+  currentSetCards = [];
+  document.getElementById('set-filter-input').value = '';
+}
+
+async function openSet(set) {
+  document.getElementById('sets-list-view').style.display = 'none';
+  document.getElementById('set-detail-view').style.display = 'block';
+
+  // Set header
+  document.getElementById('set-detail-logo').src = set.images?.logo || '';
+  document.getElementById('set-detail-name').innerHTML = `${set.name.split(' ').slice(0,-1).join(' ')} <span style="color:var(--accent)">${set.name.split(' ').slice(-1)}</span>`;
+  document.getElementById('set-detail-meta').textContent = `${set.series || ''} · ${set.releaseDate || ''} · ${set.total || set.printedTotal || '?'} cards`;
+
+  const grid = document.getElementById('set-cards-grid');
+  const status = document.getElementById('set-cards-status');
+  const countEl = document.getElementById('set-card-count');
+  grid.innerHTML = ''; countEl.textContent = ''; status.textContent = 'Loading cards...'; status.style.display = 'block';
+
+  try {
+    const res = await fetch(`/api/pokemon?path=cards&q=set.id:${set.id}&orderBy=number&pageSize=250`);
+    const data = await res.json();
+    currentSetCards = data.data || [];
+    data.data?.forEach(card => { cardCache[card.id] = card; });
+
+    status.style.display = 'none';
+    countEl.textContent = `${currentSetCards.length} cards in ${set.name}`;
+    renderSetCards(currentSetCards, grid);
+  } catch(e) {
+    status.textContent = 'Error loading cards.'; status.style.display = 'block';
+  }
+}
+
+function renderSetCards(cards, grid) {
+  grid.innerHTML = '';
+  if (!cards.length) { grid.innerHTML = '<div class="status-msg">No cards found.</div>'; return; }
+  cards.forEach(card => { cardCache[card.id] = card; renderSearchCard(card, grid); });
+}
+
+// Filter within set
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('set-filter-input')?.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    const grid = document.getElementById('set-cards-grid');
+    const filtered = q ? currentSetCards.filter(c => c.name.toLowerCase().includes(q)) : currentSetCards;
+    document.getElementById('set-card-count').textContent = `${filtered.length} cards`;
+    renderSetCards(filtered, grid);
+  });
+});
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────────
+const POKEMON_NAMES = [
+  'Abomasnow','Abra','Absol','Accelgor','Aegislash','Aerodactyl','Aggron','Aipom','Alakazam','Alolan',
+  'Alomomola','Altaria','Amaura','Ambipom','Amoonguss','Ampharos','Annihilape','Appletun','Applin',
+  'Araquanid','Arcanine','Arceus','Archen','Archeops','Armarouge','Aromatisse','Arrokuda','Articuno',
+  'Audino','Aurorus','Avalugg','Axew','Azelf','Azumarill','Azurill',
+  'Bagon','Baltoy','Banette','Barboach','Barraskewda','Basculin','Bastiodon','Bayleef','Beartic',
+  'Beautifly','Beedrill','Beheeyem','Beldum','Bellossom','Bellsprout','Bewear','Bibarel','Bidoof',
+  'Bisharp','Blacephalon','Blastoise','Blaziken','Blipbug','Blissey','Boldore','Boltund','Bounsweet',
+  'Braixen','Brambleghast','Braviary','Breloom','Brionne','Bronzong','Bronzor','Bruxish','Budew',
+  'Buizel','Bulbasaur','Buneary','Bunnelby','Burmy','Buzzwole',
+  'Cacnea','Cacturne','Calyrex','Camompt','Carbink','Carkol','Carnivine','Carracosta','Carvanha',
+  'Castform','Caterpie','Celebi','Celesteela','Centiskorch','Chandelure','Chansey','Charizard',
+  'Charmander','Charmeleon','Chatot','Cherrim','Cherubi','Chesnaught','Chespin','Chikorita',
+  'Chimchar','Chimecho','Chinchou','Chingling','Cinccino','Cinderace','Clamperl','Clauncher',
+  'Clawitzer','Claydol','Clefable','Clefairy','Cleffa','Clobbopus','Cloyster','Coalossal',
+  'Cobalion','Cofagrigus','Combee','Combusken','Comfey','Conkeldurr','Copperajah','Corphish',
+  'Corsola','Corviknight','Corvisquire','Cosmoem','Cosmog','Cottonee','Crabominable','Crabrawler',
+  'Cradily','Cramorant','Cranidos','Crawdaunt','Cresselia','Croagunk','Crobat','Croconaw','Crustle',
+  'Cryogonal','Cubchoo','Cubone','Cufant','Cursola','Cutiefly','Cyndaquil',
+  'Darkrai','Darmanitan','Dartrix','Dedenne','Deino','Delcatty','Delibird','Delphox','Dewgong',
+  'Dewott','Dhelmise','Dialga','Diancie','Diggersby','Diglett','Ditto','Dodrio','Doduo','Donphan',
+  'Doublade','Dragonair','Dragonite','Dragapult','Dragapult','Drampa','Drapion','Dratini','Drednaw',
+  'Dreepy','Drifblim','Drifloon','Drilbur','Drowzee','Druddigon','Ducklett','Dugtrio','Dunsparce',
+  'Duosion','Durant','Dusclops','Dusknoir','Duskull','Dustox','Dwebble',
+  'Eelektrik','Eelektross','Eevee','Eggs','Ekans','Eldegoss','Electabuzz','Electivire','Electrike',
+  'Electrode','Elekid','Elgyem','Emboar','Emolga','Empoleon','Entei','Espeon','Espurr','Eternatus',
+  'Excadrill','Exeggcute','Exeggutor','Exploud',
+  'Falinks','Farfetchd','Farigiraf','Fearow','Feebas','Fennekin','Feraligatr','Ferroseed','Ferrothorn',
+  'Fini','Finneon','Flaaffy','Flapple','Flareon','Fletchinder','Fletchling','Floatzel','Florges',
+  'Flygon','Fomantis','Foongus','Forretress','Fraxure','Frillish','Froakie','Frogadier','Frosmoth',
+  'Furfrou','Furret','Fuecoco',
+  'Gabite','Gallade','Galvantula','Garbodor','Garchomp','Gardevoir','Gastly','Gastrodon','Gengar',
+  'Geodude','Gible','Gigalith','Girafarig','Glaceon','Glalie','Glameow','Gligar','Gliscor','Gloom',
+  'Gogoat','Golbat','Goldeen','Golduck','Golem','Golett','Golurk','Goodra','Goomy','Gorebyss',
+  'Gossifleur','Gothita','Gothitelle','Gothorita','Gourgeist','Granbull','Grapploct','Graveler',
+  'Greedent','Greninja','Grimer','Grookey','Grotle','Groudon','Grovyle','Growlithe','Grubbin',
+  'Gumshoos','Gurdurr','Gyarados',
+  'Hakamo-o','Happiny','Hariyama','Haunter','Hawlucha','Haxorus','Heatmor','Heatran','Heliolisk',
+  'Helioptile','Heracross','Hippopotas','Hippowdon','Hitmonchan','Hitmonlee','Hitmontop','Ho-Oh',
+  'Honchkrow','Honedge','Hoopa','Hoppip','Horsea','Houndoom','Houndour','Huntail','Hydreigon',
+  'Hypno',
+  'Igglybuff','Illumise','Impidimp','Incineroar','Indeedee','Inteleon','Ivysaur',
+  'Jangmo-o','Jellicent','Jigglypuff','Jirachi','Jolteon','Joltik','Jumpluff','Jynx',
+  'Kabuto','Kabutops','Kadabra','Kakuna','Kangaskhan','Kartana','Kecleon','Kingdra','Kingler',
+  'Kirlia','Klang','Klefki','Klink','Klinklang','Komala','Kommo-o','Krabby','Kricketot','Kricketune',
+  'Krokorok','Krookodile','Kubfu','Kyogre','Kyurem',
+  'Lairon','Lampent','Lanturn','Lapras','Larvesta','Larvitar','Latias','Latios','Leafeon','Leavanny',
+  'Ledian','Ledyba','Lickilicky','Lickitung','Liepard','Lileep','Lilligant','Lillipup','Linoone',
+  'Litleo','Litwick','Lokix','Lopunny','Lotad','Loudred','Lucario','Ludicolo','Lugia','Lumineon',
+  'Lunala','Lunatone','Lurantis','Luvdisc','Luxio','Luxray',
+  'Machamp','Machoke','Machop','Magby','Magcargo','Magearna','Magikarp','Magmar','Magmortar',
+  'Magnemite','Magneton','Magnezone','Makuhita','Malamar','Mamoswine','Manaphy','Mandibuzz',
+  'Manectric','Mankey','Mantine','Mantyke','Maractus','Mareanie','Mareep','Marill','Marowak',
+  'Marshadow','Masquerain','Mawile','Medicham','Meditite','Meganium','Meloetta','Meowstic','Meowth',
+  'Mesprit','Metagross','Metang','Metapod','Mew','Mewtwo','Mienfoo','Mienshao','Mightyena',
+  'Milcery','Milotic','Miltank','Mimikyu','Minccino','Minior','Minun','Misdreavus','Mismagius',
+  'Moltres','Morelull','Morgrem','Morpeko','Mothim','Mr. Mime','Mr. Rime','Mudkip','Mudsdale',
+  'Munchlax','Munna','Murkrow','Musharna',
+  'Naganadel','Necrozma','Nickit','Nihilego','Nincada','Ninetales','Ninjask','Noctowl','Noibat',
+  'Noivern','Nosepass','Numel','Nuzleaf',
+  'Obstagoon','Octillery','Oddish','Omanyte','Omastar','Onix','Orbeetle','Oricorio','Oshawott',
+  'Pachirisu','Palkia','Palossand','Pancham','Pangoro','Paras','Parasect','Passimian','Pawniard',
+  'Pecharunt','Pelipper','Persian','Phantump','Phanpy','Pichu','Pidgeot','Pidgeotto','Pidgey',
+  'Pidove','Pignite','Pikachu','Pikipek','Pilowswine','Pineco','Pinsir','Piplup','Plusle','Politoed',
+  'Poliwag','Poliwhirl','Poliwrath','Ponyta','Poochyena','Popplio','Porygon','Porygon-Z','Porygon2',
+  'Primarina','Primeape','Prinplup','Probopass','Psyduck','Pumpkaboo','Purrloin','Purugly',
+  'Pyroar','Pyukumuku',
+  'Quagsire','Quilava','Quilladin','Quaxly','Quaxwell','Quaquaval',
+  'Raichu','Raikou','Ralts','Rampardos','Rapidash','Raticate','Rattata','Rayquaza','Regice',
+  'Regidrago','Regieleki','Regigigas','Regirock','Registeel','Relicanth','Remoraid','Reshiram',
+  'Reuniclus','Rhyhorn','Rhydon','Rhyperior','Riolu','Rockruff','Roggenrola','Roselia','Roserade',
+  'Rotom','Rowlet','Rufflet',
+  'Salandit','Salazzle','Samurott','Sandaconda','Sandile','Sandshrew','Sandslash','Sandygast',
+  'Sawk','Sawsbuck','Scatterbug','Sceptile','Scizor','Scolipede','Scrafty','Scraggy','Scyther',
+  'Seadra','Seaking','Sealeo','Seedot','Seel','Seismitoad','Sentret','Serperior','Servine','Seviper',
+  'Sewaddle','Sharpedo','Shaymin','Shedinja','Shelgon','Shellder','Shelmet','Shellos','Shieldon',
+  'Shiftry','Shiinotic','Shinx','Shroomish','Shuckle','Shuppet','Sigilyph','Silcoon','Silvally',
+  'Simipour','Simisage','Simisear','Skarmory','Skovet','Skiploom','Skitty','Skorupi','Skrelp',
+  'Skuntank','Slaking','Slakoth','Sliggoo','Slowbro','Slowking','Slowpoke','Slugma','Slurpuff',
+  'Smeargle','Smoochum','Sneasel','Snivy','Snom','Snorlax','Snorunt','Snover','Snubbull','Sobble',
+  'Solosis','Solrock','Spearow','Spectrier','Spewpa','Spheal','Spinarak','Spinda','Spiritomb',
+  'Spoink','Spritzee','Squirtle','Stakataka','Stantler','Staraptor','Staravia','Starly','Starmie',
+  'Staryu','Steelix','Steenee','Stufful','Stunfisk','Stunky','Sudowoodo','Suicune','Sunflora',
+  'Sunkern','Surskit','Swablu','Swadloon','Swalot','Swampert','Swanna','Swellow','Swinub','Swoobat',
+  'Sylveon','Sprigatito','Floragato','Meowscarada',
+  'Taillow','Talonflame','Tangela','Tangrowth','Tapu Bulu','Tapu Fini','Tapu Koko','Tapu Lele',
+  'Tauros','Teddiursa','Tentacool','Tentacruel','Tepig','Terrakion','Togekiss','Togepi','Togetic',
+  'Torchic','Torkoal','Tornadus','Torterra','Totodile','Toxapex','Toxicroak','Toxtricity','Tranquill',
+  'Trapinch','Treecko','Trevenant','Tropius','Trubbish','Tsareena','Turtonator','Turtwig','Tynamo',
+  'Type: Null','Typhlosion','Tyranitar','Tyrantrum','Tyrogue','Tyrunt',
+  'Umbreon','Unfezant','Unown','Ursaring','Ursaluna','Urshifu',
+  'Vanillish','Vanillite','Vanilluxe','Vaporeon','Venipede','Venomoth','Venonat','Venusaur',
+  'Vespiquen','Victini','Vigoroth','Vikavolt','Vileplume','Virizion','Vivillon','Volbeat',
+  'Volcanion','Volcarona','Voltorb','Vullaby','Vulpix',
+  'Wailmer','Wailord','Walrein','Wartortle','Watchog','Weavile','Weedle','Weepinbell','Weezing',
+  'Whimsicott','Whirlipede','Whiscash','Whismur','Wigglytuff','Wishiwashi','Wobbuffet','Woobat',
+  'Wooloo','Wooper','Wormadam','Wurmple','Wynaut',
+  'Xatu','Xerneas','Xurkitree',
+  'Yamask','Yanma','Yanmega','Yveltal',
+  'Zangoose','Zapdos','Zarude','Zeraora','Zigzagoon','Zoroark','Zorua','Zubat','Zweilous','Zygarde',
+];
+
+let autocompleteActive = false;
+
+function initAutocomplete() {
+  const input = document.getElementById('search-input');
+  const dropdown = document.getElementById('autocomplete-dropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', function() {
+    const val = this.value.trim().toLowerCase();
+    dropdown.innerHTML = '';
+    if (val.length < 2) { dropdown.style.display = 'none'; return; }
+
+    const matches = POKEMON_NAMES
+      .filter(n => n.toLowerCase().startsWith(val))
+      .slice(0, 8);
+
+    if (!matches.length) { dropdown.style.display = 'none'; return; }
+
+    matches.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.innerHTML = `<span style="color:var(--accent);font-weight:700">${name.slice(0, val.length)}</span>${name.slice(val.length)}`;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = name;
+        dropdown.style.display = 'none';
+        searchCards();
+      });
+      dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { dropdown.style.display = 'none'; }, 150);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    const active = dropdown.querySelector('.autocomplete-item.ac-active');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!active) items[0]?.classList.add('ac-active');
+      else { active.classList.remove('ac-active'); (active.nextElementSibling || items[0])?.classList.add('ac-active'); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!active) items[items.length-1]?.classList.add('ac-active');
+      else { active.classList.remove('ac-active'); (active.previousElementSibling || items[items.length-1])?.classList.add('ac-active'); }
+    } else if (e.key === 'Enter') {
+      if (active) { input.value = active.textContent; dropdown.style.display = 'none'; searchCards(); e.preventDefault(); }
+    } else if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+// ── SESSION MANAGEMENT ────────────────────────────────────────────
+async function validateAndRefreshSession() {
+  if (!currentSession || !currentUser) return;
+
+  try {
+    // Try to use the current session — if it fails, attempt refresh
+    const res = await fetch('/api/profile', {
+      headers: { 'Authorization': 'Bearer ' + currentSession }
+    });
+
+    if (res.ok) {
+      // Session still valid — load votes
+      await loadMyVotes();
+      return;
+    }
+
+    // Session invalid — try to refresh using stored refresh token
+    const refreshToken = localStorage.getItem('gc_refresh_token');
+    if (!refreshToken) {
+      // No refresh token — log out silently
+      silentLogout();
+      return;
+    }
+
+    const refreshRes = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'refresh', refresh_token: refreshToken })
+    });
+
+    if (refreshRes.ok) {
+      const data = await refreshRes.json();
+      currentSession = data.session.access_token;
+      localStorage.setItem('gc_session', currentSession);
+      localStorage.setItem('gc_refresh_token', data.session.refresh_token);
+      await loadMyVotes();
+    } else {
+      silentLogout();
+    }
+  } catch(e) {
+    // Network error — keep user logged in optimistically
+    console.log('Session check failed — keeping session');
+  }
+}
+
+function silentLogout() {
+  currentUser = null;
+  currentSession = null;
+  myVotedIds = new Set();
+  votesRemaining = 10;
+  localStorage.removeItem('gc_user');
+  localStorage.removeItem('gc_session');
+  localStorage.removeItem('gc_refresh_token');
+  updateAuthUI();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.getElementById('search-btn').addEventListener('click',searchCards);
+document.getElementById('search-input').addEventListener('keydown',e=>e.key==='Enter'&&searchCards());
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCardModal();closeAuthModal();}});
+initAutocomplete();
+
+updateAuthUI();
+validateAndRefreshSession();
+renderLeaderboard();
+searchCards();
+</script>
+</body>
+</html>
