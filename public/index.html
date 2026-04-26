@@ -512,6 +512,7 @@ async function doLogin(){
     currentSession=data.session?.access_token;
     localStorage.setItem('gc_user',JSON.stringify(data.user));
     localStorage.setItem('gc_session',currentSession);
+    if(data.session?.refresh_token) localStorage.setItem('gc_refresh_token', data.session.refresh_token);
     closeAuthModal();updateAuthUI();
     await loadMyVotes();
     showToast('Welcome back, '+data.user.username+'!');
@@ -545,6 +546,7 @@ async function doRegister(){
       currentSession=data.session.access_token;
       localStorage.setItem('gc_user',JSON.stringify(data.user));
       localStorage.setItem('gc_session',currentSession);
+      if(data.session?.refresh_token) localStorage.setItem('gc_refresh_token', data.session.refresh_token);
       closeAuthModal();
       updateAuthUI();
       await loadMyVotes();
@@ -562,7 +564,7 @@ async function doRegister(){
 
 function logout(){
   currentUser=null;currentSession=null;myVotedIds=new Set();votesRemaining=10;
-  localStorage.removeItem('gc_user');localStorage.removeItem('gc_session');
+  localStorage.removeItem('gc_user');localStorage.removeItem('gc_session');localStorage.removeItem('gc_refresh_token');
   updateAuthUI();showToast('Logged out.');
   showView('leaderboard',document.querySelector('nav button'));
   renderLeaderboard();
@@ -1265,6 +1267,62 @@ function initAutocomplete() {
   });
 }
 
+// ── SESSION MANAGEMENT ────────────────────────────────────────────
+async function validateAndRefreshSession() {
+  if (!currentSession || !currentUser) return;
+
+  try {
+    // Try to use the current session — if it fails, attempt refresh
+    const res = await fetch('/api/profile', {
+      headers: { 'Authorization': 'Bearer ' + currentSession }
+    });
+
+    if (res.ok) {
+      // Session still valid — load votes
+      await loadMyVotes();
+      return;
+    }
+
+    // Session invalid — try to refresh using stored refresh token
+    const refreshToken = localStorage.getItem('gc_refresh_token');
+    if (!refreshToken) {
+      // No refresh token — log out silently
+      silentLogout();
+      return;
+    }
+
+    const refreshRes = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'refresh', refresh_token: refreshToken })
+    });
+
+    if (refreshRes.ok) {
+      const data = await refreshRes.json();
+      currentSession = data.session.access_token;
+      localStorage.setItem('gc_session', currentSession);
+      localStorage.setItem('gc_refresh_token', data.session.refresh_token);
+      await loadMyVotes();
+    } else {
+      silentLogout();
+    }
+  } catch(e) {
+    // Network error — keep user logged in optimistically
+    console.log('Session check failed — keeping session');
+  }
+}
+
+function silentLogout() {
+  currentUser = null;
+  currentSession = null;
+  myVotedIds = new Set();
+  votesRemaining = 10;
+  localStorage.removeItem('gc_user');
+  localStorage.removeItem('gc_session');
+  localStorage.removeItem('gc_refresh_token');
+  updateAuthUI();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────
 document.getElementById('search-btn').addEventListener('click',searchCards);
 document.getElementById('search-input').addEventListener('keydown',e=>e.key==='Enter'&&searchCards());
@@ -1272,7 +1330,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCardModal();cl
 initAutocomplete();
 
 updateAuthUI();
-if(currentSession)loadMyVotes();
+validateAndRefreshSession();
 renderLeaderboard();
 searchCards();
 </script>
