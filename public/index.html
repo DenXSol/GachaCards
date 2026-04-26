@@ -27,7 +27,13 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .nav-play-btn{background:var(--accent);color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:opacity 0.15s;white-space:nowrap;}
 .nav-play-btn:hover{opacity:0.85;}
 
-/* VOTER SCROLL */
+/* PRICE */
+.price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
+.price-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.price-val{font-family:var(--font-display);font-size:1.4rem;color:var(--accent);letter-spacing:0.04em;}
+.price-source{font-size:10px;color:var(--muted);margin-bottom:12px;}
+.price-source a{color:var(--muted2);text-decoration:none;}
+.price-source a:hover{color:var(--accent);text-decoration:underline;}
 .voters-panel{width:200px;min-width:200px;border-left:1px solid var(--border2);padding:1rem;display:flex;flex-direction:column;gap:0;}
 .voters-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
 .voter-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
@@ -367,6 +373,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       <div class="card-detail-row"><span class="card-detail-label">Retreat</span><span class="card-detail-val" id="cm-retreat"></span></div>
       <div id="cm-attacks"></div>
       <div class="divider"></div>
+      <div id="cm-price"></div>
       <div id="cm-vote-count" style="font-size:13px;color:var(--muted2);margin-bottom:10px;"></div>
       <button class="modal-vote-btn" id="cm-vote-btn" onclick="modalVote()"></button>
     </div>
@@ -779,6 +786,23 @@ function openCardModal(card){
 
   const count=globalVoteCounts[card.id]?.count||0;
   document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
+
+  // Price
+  const priceEl=document.getElementById('cm-price');
+  const tcgPrices=card.tcgplayer?.prices;
+  const cmPrices=card.cardmarket?.prices;
+  let priceHTML='';
+  if(tcgPrices){
+    const variant=tcgPrices.holofoil||tcgPrices.normal||tcgPrices.reverseHolofoil||tcgPrices['1stEditionHolofoil']||Object.values(tcgPrices)[0];
+    if(variant?.market){
+      const url=card.tcgplayer?.url||'https://www.tcgplayer.com';
+      priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">$${variant.market.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">TCGPlayer ↗</a> · ${card.tcgplayer?.updatedAt||''}</div>`;
+    }
+  } else if(cmPrices?.averageSellPrice){
+    const url=card.cardmarket?.url||'https://www.cardmarket.com';
+    priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">€${cmPrices.averageSellPrice.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">CardMarket ↗</a> · ${card.cardmarket?.updatedAt||''}</div>`;
+  }
+  priceEl.innerHTML=priceHTML;
   updateModalVoteBtn();
   document.getElementById('card-modal-overlay').classList.add('open');
   // Load voters
