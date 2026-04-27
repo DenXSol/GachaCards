@@ -40,7 +40,8 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .voter-item:last-child{border-bottom:none;}
 .voter-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0;}
 .voter-avatar img{width:100%;height:100%;object-fit:cover;}
-.voter-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.voter-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.15s;}
+.voter-name:hover{color:var(--accent);}
 .voters-empty{font-size:12px;color:var(--muted);text-align:center;padding:1rem 0;}
 
 /* EDIT PROFILE */
@@ -352,9 +353,14 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
   </div>
 </div>
 
-<!-- PROFILE -->
+<!-- PROFILE (own) -->
 <div class="view" id="view-profile">
   <div id="profile-content"><div class="status-msg">Loading profile...</div></div>
+</div>
+
+<!-- USER PROFILE VIEWER -->
+<div class="view" id="view-user-profile">
+  <div id="user-profile-content"><div class="status-msg">Loading...</div></div>
 </div>
 
 <!-- CARD DETAIL MODAL -->
@@ -916,7 +922,7 @@ async function loadVoters(cardId){
         :`<span>${(u?.username||'?')[0].toUpperCase()}</span>`;
       return `<div class="voter-item">
         <div class="voter-avatar">${avatar}</div>
-        <div class="voter-name">${u?.username||'Unknown'}</div>
+        <div class="voter-name" onclick="viewUserProfile('${u?.username||''}')" style="cursor:pointer;" title="View ${u?.username}'s profile">${u?.username||'Unknown'}</div>
       </div>`;
     }).join('');
   }catch(e){list.innerHTML='<div class="voters-empty">Could not load</div>';}
@@ -1265,6 +1271,86 @@ function initAutocomplete() {
       dropdown.style.display = 'none';
     }
   });
+}
+
+// ── USER PROFILE VIEWER ───────────────────────────────────────────
+let previousView = 'leaderboard';
+
+async function viewUserProfile(username) {
+  if (!username) return;
+
+  // Remember where we came from
+  const activeView = document.querySelector('.view.active');
+  if (activeView) previousView = activeView.id.replace('view-', '');
+
+  // Close any open modal
+  closeCardModal();
+
+  // Switch to user profile view
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-user-profile').classList.add('active');
+
+  const content = document.getElementById('user-profile-content');
+  content.innerHTML = '<div class="status-msg">Loading profile...</div>';
+
+  try {
+    const res = await fetch(`/api/profile?username=${encodeURIComponent(username)}`);
+    const data = await res.json();
+    if (!res.ok) { content.innerHTML = `<div class="status-msg">User not found.</div>`; return; }
+
+    const { profile, votes } = data;
+
+    const avatar = profile.avatar_card_image
+      ? `<img src="${profile.avatar_card_image}" alt="${profile.username}"/>`
+      : `<span>${profile.username[0].toUpperCase()}</span>`;
+
+    content.innerHTML = `
+      <button class="set-back-btn" onclick="goBack()">← Back</button>
+      <div class="profile-header">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar">${avatar}</div>
+        </div>
+        <div>
+          <div class="profile-username">${profile.username}</div>
+          <div class="profile-meta">
+            ${profile.twitter_handle ? `<a href="https://twitter.com/${profile.twitter_handle.replace('@','')}" target="_blank">${profile.twitter_handle}</a>` : ''}
+            ${profile.discord_id ? `<span>Discord: ${profile.discord_id}</span>` : ''}
+            ${profile.wallet_address ? `<span>${profile.wallet_address.slice(0,6)}...${profile.wallet_address.slice(-4)}</span>` : ''}
+            <span>Joined ${new Date(profile.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:1rem;">
+        ${profile.username.toUpperCase()}'S <span style="color:var(--accent)">WANTED</span> CARDS
+        <span style="font-size:1rem;color:var(--muted2);font-family:var(--font-body);font-weight:400;margin-left:8px;">${votes?.length || 0} cards</span>
+      </div>
+      ${votes?.length ? `
+        <div class="profile-cards-grid">
+          ${votes.map(v => `
+            <div class="profile-card" onclick="fetchAndOpenCard('${v.card_id}')">
+              ${v.card_image ? `<img src="${v.card_image}" alt="${v.card_name}" loading="lazy"/>` : `<div class="no-img-placeholder" style="height:100px">No image</div>`}
+              <div class="profile-card-info">
+                <div class="profile-card-name">${v.card_name}</div>
+                <div class="profile-card-set">${v.set_name || ''}</div>
+              </div>
+            </div>`).join('')}
+        </div>` 
+      : `<div class="status-msg">No voted cards yet.</div>`}`;
+
+  } catch(e) {
+    content.innerHTML = '<div class="status-msg">Error loading profile.</div>';
+  }
+}
+
+function goBack() {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${previousView}`).classList.add('active');
+  // Restore nav active state
+  const navMap = { leaderboard: 0, search: 1, sets: 2, profile: 3 };
+  const navBtns = document.querySelectorAll('nav button');
+  const idx = navMap[previousView];
+  if (idx !== undefined && navBtns[idx]) navBtns[idx].classList.add('active');
 }
 
 // ── SESSION MANAGEMENT ────────────────────────────────────────────
