@@ -27,7 +27,10 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .nav-play-btn{background:var(--accent);color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;transition:opacity 0.15s;white-space:nowrap;}
 .nav-play-btn:hover{opacity:0.85;}
 
-/* PRICE */
+/* GACHA BADGE */
+.gacha-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#000;font-family:var(--font-body);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;text-decoration:none;text-transform:uppercase;letter-spacing:0.05em;margin-top:6px;transition:opacity 0.15s;white-space:nowrap;}
+.gacha-badge:hover{opacity:0.85;}
+.gacha-badge-grade{font-size:9px;opacity:0.7;margin-left:2px;}
 .price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
 .price-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
 .price-val{font-family:var(--font-display);font-size:1.4rem;color:var(--accent);letter-spacing:0.04em;}
@@ -458,7 +461,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       </div>
 
       <!-- VS -->
-      <div class="tot-vs"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/Layer%202%20(1).png" alt="vs" style="width:300px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(200,255,0,0.3));"/></div>
+      <div class="tot-vs"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/Layer%202%20(1).png" alt="vs" style="width:120px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(200,255,0,0.3));"/></div>
 
       <!-- RIGHT CARD -->
       <div class="tot-card-wrap" id="tot-right-wrap">
@@ -876,6 +879,7 @@ function renderSearchCard(card,grid){
     <div class="s-card-body">
       <div class="s-card-name">${card.name}</div>
       <div class="s-card-set">${card.set?.name||''} · #${card.number||'?'}</div>
+      ${gachaInventory[id] ? `<a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="gacha-badge" style="font-size:9px;padding:2px 6px;">🎴 On Gacha · ${gachaInventory[id].grade}</a>` : ''}
       <div class="s-card-footer">
         <span class="s-vote-count" id="vc-${id}">${count>0?count+' want':''}</span>
         <button class="s-vote-btn ${voted?'voted':''}" id="vb-${id}">${voted?'✦ Wanted':'✧ Want'}</button>
@@ -929,20 +933,25 @@ function openCardModal(card){
   const count=globalVoteCounts[card.id]?.count||0;
   document.getElementById('cm-vote-count').textContent=count>0?`${count} people want this card`:'';
 
-  // Price
+  // Gacha badge + price
   const priceEl=document.getElementById('cm-price');
   const tcgPrices=card.tcgplayer?.prices;
   const cmPrices=card.cardmarket?.prices;
   let priceHTML='';
+
+  // Gacha availability badge
+  priceHTML += getGachaBadge(card.id);
+  if(priceHTML) priceHTML += '<div style="margin-bottom:8px"></div>';
+
   if(tcgPrices){
     const variant=tcgPrices.holofoil||tcgPrices.normal||tcgPrices.reverseHolofoil||tcgPrices['1stEditionHolofoil']||Object.values(tcgPrices)[0];
     if(variant?.market){
       const url=card.tcgplayer?.url||'https://www.tcgplayer.com';
-      priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">$${variant.market.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">TCGPlayer ↗</a> · ${card.tcgplayer?.updatedAt||''}</div>`;
+      priceHTML+=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">$${variant.market.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">TCGPlayer ↗</a> · ${card.tcgplayer?.updatedAt||''}</div>`;
     }
   } else if(cmPrices?.averageSellPrice){
     const url=card.cardmarket?.url||'https://www.cardmarket.com';
-    priceHTML=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">€${cmPrices.averageSellPrice.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">CardMarket ↗</a> · ${card.cardmarket?.updatedAt||''}</div>`;
+    priceHTML+=`<div class="price-row"><span class="price-label">Avg Raw Price</span><span class="price-val">€${cmPrices.averageSellPrice.toFixed(2)}</span></div><div class="price-source">Source: <a href="${url}" target="_blank" rel="noopener">CardMarket ↗</a> · ${card.cardmarket?.updatedAt||''}</div>`;
   }
   priceEl.innerHTML=priceHTML;
   updateModalVoteBtn();
@@ -1563,6 +1572,37 @@ function resetTOT() {
   document.getElementById('tot-landing-error').textContent = '';
 }
 
+// ── GACHA INVENTORY ───────────────────────────────────────────────
+let gachaInventory = {}; // tcgCardId → { grade, psaId, name }
+
+async function loadGachaInventory() {
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/DenXSol/GachaCards/main/gacha-inventory.json');
+    const data = await res.json();
+    const pokemon = data.pokemon || [];
+    pokemon.forEach(card => {
+      if (card.tcgCardId) {
+        gachaInventory[card.tcgCardId] = {
+          grade: card.grade,
+          psaId: card.psaId,
+          name: card.name,
+        };
+      }
+    });
+    console.log(`Gacha inventory loaded: ${Object.keys(gachaInventory).length} cards`);
+  } catch(e) {
+    console.log('Could not load Gacha inventory:', e.message);
+  }
+}
+
+function getGachaBadge(cardId) {
+  const inv = gachaInventory[cardId];
+  if (!inv) return '';
+  return `<a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="gacha-badge">
+    🎴 Available on Gacha <span class="gacha-badge-grade">${inv.grade}</span>
+  </a>`;
+}
+
 // ── USER PROFILE VIEWER ───────────────────────────────────────────
 let previousView = 'leaderboard';
 
@@ -1708,6 +1748,7 @@ initAutocomplete();
 
 updateAuthUI();
 validateAndRefreshSession();
+loadGachaInventory();
 renderLeaderboard();
 searchCards();
 </script>
