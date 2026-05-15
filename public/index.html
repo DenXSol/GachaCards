@@ -269,7 +269,19 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .autocomplete-item span{color:var(--accent);}
 
 /* SETS */
-.sets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+/* FILTERS */
+.filter-toggle-btn{background:var(--surface);border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:13px;font-weight:600;padding:11px 16px;border-radius:8px;cursor:pointer;transition:all 0.15s;white-space:nowrap;letter-spacing:0.03em;}
+.filter-toggle-btn:hover,.filter-toggle-btn.open{color:var(--accent);border-color:var(--accent-border);background:var(--accent-dim);}
+.filter-panel{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.filter-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;}
+.filter-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);font-family:var(--font-body);font-size:12px;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;white-space:nowrap;}
+.filter-btn:hover{color:var(--text);border-color:#444;}
+.filter-btn.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
+.filter-btn-clear{color:#ff6b6b;border-color:rgba(255,107,107,0.3);}
+.filter-btn-clear:hover{background:rgba(255,107,107,0.1);border-color:#ff6b6b;color:#ff6b6b;}
+
+/* SETS GRID */
 .set-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.15s,transform 0.15s;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
 .set-card:hover{border-color:var(--accent-border);transform:translateY(-2px);}
 .set-card img{height:60px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
@@ -368,7 +380,23 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
     </div>
     <button id="search-btn">Search</button>
+    <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFilters()">⚙ Filters</button>
   </div>
+
+  <!-- COLLAPSIBLE FILTER PANEL -->
+  <div class="filter-panel" id="filter-panel" style="display:none">
+    <div class="filter-label">Sort by</div>
+    <div class="filter-btns">
+      <button class="filter-btn" data-sort="price-asc"    onclick="setSort('price-asc',this)">💲 Price ↑</button>
+      <button class="filter-btn" data-sort="price-desc"   onclick="setSort('price-desc',this)">💲 Price ↓</button>
+      <button class="filter-btn" data-sort="num-asc"      onclick="setSort('num-asc',this)"># Card ↑</button>
+      <button class="filter-btn" data-sort="num-desc"     onclick="setSort('num-desc',this)"># Card ↓</button>
+      <button class="filter-btn" data-sort="date-desc"    onclick="setSort('date-desc',this)">📅 Date ↑ New</button>
+      <button class="filter-btn" data-sort="date-asc"     onclick="setSort('date-asc',this)">📅 Date ↓ Old</button>
+      <button class="filter-btn filter-btn-clear"          onclick="clearSort()">✕ Clear</button>
+    </div>
+  </div>
+
   <div id="search-count" class="search-count"></div>
   <div class="search-grid" id="search-grid"></div>
   <div id="search-status" class="status-msg">Search for a Pokémon to see all their cards</div>
@@ -380,7 +408,11 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     <div class="page-header">
       <div>
         <h1>BROWSE <span>SETS</span></h1>
-        <div class="page-sub">All Pokémon TCG sets · Newest first</div>
+        <div class="page-sub">All Pokémon TCG sets</div>
+      </div>
+      <div class="filter-btns" style="align-self:flex-end;">
+        <button class="filter-btn active" id="sets-sort-new" onclick="setSetsSort('desc',this)">📅 Newest First</button>
+        <button class="filter-btn" id="sets-sort-old" onclick="setSetsSort('asc',this)">📅 Oldest First</button>
       </div>
     </div>
     <div class="sets-grid" id="sets-grid"></div>
@@ -758,15 +790,39 @@ function showView(name,btn){
 // ── LEADERBOARD ───────────────────────────────────────────────────
 async function renderLeaderboard(){
   const grid=document.getElementById('lb-grid');
-  grid.innerHTML='<div class="status-msg">Loading...</div>';
+
+  // Show instantly with cached data first if we have it
+  if(Object.keys(globalVoteCounts).length > 0) {
+    buildLeaderboardDOM(grid);
+  } else {
+    grid.innerHTML='<div class="status-msg">Loading...</div>';
+  }
+
   await loadLeaderboard();
 
-  // fetch images for top cards
+  // Batch fetch all top cards in one API call instead of one-by-one
   const topIds=Object.entries(globalVoteCounts).sort((a,b)=>b[1].count-a[1].count).slice(0,50).map(([id])=>id);
-  await Promise.allSettled(topIds.filter(id=>!cardCache[id]).map(async id=>{
-    try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();if(d.data)cardCache[id]=d.data;}catch(e){}
-  }));
+  const uncached = topIds.filter(id=>!cardCache[id]);
 
+  if (uncached.length > 0) {
+    try {
+      // Fetch up to 50 cards in a single API call using id filter
+      const idQuery = uncached.map(id => `id:${id}`).join(' OR ');
+      const r = await fetch(`/api/pokemon?path=cards&q=${encodeURIComponent(idQuery)}&pageSize=50`);
+      const d = await r.json();
+      (d.data || []).forEach(card => { cardCache[card.id] = card; });
+    } catch(e) {
+      // Fallback to parallel individual fetches if batch fails
+      await Promise.allSettled(uncached.map(async id=>{
+        try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();if(d.data)cardCache[id]=d.data;}catch(e){}
+      }));
+    }
+  }
+
+  buildLeaderboardDOM(grid);
+}
+
+function buildLeaderboardDOM(grid){
   const allCards=Object.entries(globalVoteCounts)
     .map(([id,info])=>({id,count:info.count,card:cardCache[id],info}))
     .filter(c=>c.count>0)
@@ -853,6 +909,7 @@ async function searchCards(){
   const status=document.getElementById('search-status');
   const countEl=document.getElementById('search-count');
   grid.innerHTML='';countEl.textContent='';
+  currentSearchCards=[];
   status.textContent='Searching...';status.style.display='block';
   try{
     const res=await fetch(`/api/pokemon?path=cards&q=name:"${encodeURIComponent(q)}"&orderBy=set.releaseDate&pageSize=250`);
@@ -861,7 +918,11 @@ async function searchCards(){
     status.style.display='none';
     if(!cards.length){status.textContent='No cards found.';status.style.display='block';return;}
     countEl.textContent=`${cards.length} card${cards.length!==1?'s':''} found for "${q}"`;
-    cards.forEach(card=>{cardCache[card.id]=card;renderSearchCard(card,grid);});
+    // Store for sorting
+    currentSearchCards = cards;
+    cards.forEach(card=>{ cardCache[card.id]=card; });
+    // Apply any active sort, or render default
+    if(currentSort) { applySortAndRender(); } else { cards.forEach(card=>renderSearchCard(card,grid)); }
   }catch(e){status.textContent='Error fetching cards. Try again.';status.style.display='block';}
 }
 
@@ -1157,6 +1218,83 @@ async function setAvatar(imageUrl){
       showToast('✦ Profile image updated!');
     }
   }catch(e){showToast('Error updating avatar.');}
+}
+
+// ── SEARCH FILTERS ────────────────────────────────────────────────
+let currentSort = null;
+let currentSearchCards = [];
+let setsSortOrder = 'desc';
+
+function toggleFilters() {
+  const panel = document.getElementById('filter-panel');
+  const btn = document.getElementById('filter-toggle-btn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  btn.classList.toggle('open', !isOpen);
+}
+
+function setSort(sort, el) {
+  currentSort = sort;
+  document.querySelectorAll('.filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applySortAndRender();
+}
+
+function clearSort() {
+  currentSort = null;
+  document.querySelectorAll('.filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
+  applySortAndRender();
+}
+
+function getCardPrice(card) {
+  const tcg = card.tcgplayer?.prices;
+  if (tcg) {
+    const v = tcg.holofoil || tcg.normal || tcg.reverseHolofoil || tcg['1stEditionHolofoil'] || Object.values(tcg)[0];
+    return v?.market || v?.mid || 0;
+  }
+  return card.cardmarket?.prices?.averageSellPrice || 0;
+}
+
+function applySortAndRender() {
+  if (!currentSearchCards.length) return;
+  let sorted = [...currentSearchCards];
+
+  switch(currentSort) {
+    case 'price-asc':
+      sorted.sort((a,b) => getCardPrice(a) - getCardPrice(b));
+      break;
+    case 'price-desc':
+      sorted.sort((a,b) => getCardPrice(b) - getCardPrice(a));
+      break;
+    case 'num-asc':
+      sorted.sort((a,b) => parseInt(a.number)||0 - (parseInt(b.number)||0));
+      break;
+    case 'num-desc':
+      sorted.sort((a,b) => parseInt(b.number)||0 - (parseInt(a.number)||0));
+      break;
+    case 'date-desc':
+      sorted.sort((a,b) => (b.set?.releaseDate||'').localeCompare(a.set?.releaseDate||''));
+      break;
+    case 'date-asc':
+      sorted.sort((a,b) => (a.set?.releaseDate||'').localeCompare(b.set?.releaseDate||''));
+      break;
+  }
+
+  const grid = document.getElementById('search-grid');
+  grid.innerHTML = '';
+  sorted.forEach(card => renderSearchCard(card, grid));
+}
+
+function setSetsSort(order, el) {
+  setsSortOrder = order;
+  document.querySelectorAll('#sets-list-view .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (allSets.length) {
+    const sorted = order === 'asc'
+      ? [...allSets].sort((a,b) => (a.releaseDate||'').localeCompare(b.releaseDate||''))
+      : [...allSets].sort((a,b) => (b.releaseDate||'').localeCompare(a.releaseDate||''));
+    renderSetsGrid(sorted);
+  }
 }
 
 // ── BROWSE SETS ───────────────────────────────────────────────────
