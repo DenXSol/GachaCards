@@ -432,6 +432,19 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     <div class="set-filter-row">
       <input type="text" id="set-filter-input" placeholder="Filter by Pokémon name within this set..." autocomplete="off"/>
     </div>
+
+    <!-- FILTER PANEL FOR SETS -->
+    <div style="margin-bottom:1rem;">
+      <div class="filter-btns">
+        <button class="filter-btn" data-setsort="price-asc"  onclick="setSetSort('price-asc',this)">💲 Price ↑</button>
+        <button class="filter-btn" data-setsort="price-desc" onclick="setSetSort('price-desc',this)">💲 Price ↓</button>
+        <button class="filter-btn" data-setsort="num-asc"    onclick="setSetSort('num-asc',this)"># Card ↑</button>
+        <button class="filter-btn" data-setsort="num-desc"   onclick="setSetSort('num-desc',this)"># Card ↓</button>
+        <button class="filter-btn" data-setsort="date-desc"  onclick="setSetSort('date-desc',this)">📅 New</button>
+        <button class="filter-btn" data-setsort="date-asc"   onclick="setSetSort('date-asc',this)">📅 Old</button>
+        <button class="filter-btn filter-btn-clear"           onclick="clearSetSort()">✕ Clear</button>
+      </div>
+    </div>
     <div class="search-count" id="set-card-count"></div>
     <div class="search-grid" id="set-cards-grid"></div>
     <div id="set-cards-status" class="status-msg"></div>
@@ -1297,6 +1310,42 @@ function setSetsSort(order, el) {
   }
 }
 
+// ── SET DETAIL SORT ───────────────────────────────────────────────
+let currentSetSort = null;
+
+function setSetSort(sort, el) {
+  currentSetSort = sort;
+  document.querySelectorAll('[data-setsort]').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  applySetSortAndRender();
+}
+
+function clearSetSort() {
+  currentSetSort = null;
+  document.querySelectorAll('[data-setsort]').forEach(b => b.classList.remove('active'));
+  applySetSortAndRender();
+}
+
+function applySetSortAndRender() {
+  const nameFilter = document.getElementById('set-filter-input')?.value.trim().toLowerCase() || '';
+  let cards = nameFilter
+    ? currentSetCards.filter(c => c.name.toLowerCase().includes(nameFilter))
+    : [...currentSetCards];
+
+  switch(currentSetSort) {
+    case 'price-asc':  cards.sort((a,b) => getCardPrice(a) - getCardPrice(b)); break;
+    case 'price-desc': cards.sort((a,b) => getCardPrice(b) - getCardPrice(a)); break;
+    case 'num-asc':    cards.sort((a,b) => (parseInt(a.number)||0) - (parseInt(b.number)||0)); break;
+    case 'num-desc':   cards.sort((a,b) => (parseInt(b.number)||0) - (parseInt(a.number)||0)); break;
+    case 'date-desc':  cards.sort((a,b) => (b.set?.releaseDate||'').localeCompare(a.set?.releaseDate||'')); break;
+    case 'date-asc':   cards.sort((a,b) => (a.set?.releaseDate||'').localeCompare(b.set?.releaseDate||'')); break;
+  }
+
+  document.getElementById('set-card-count').textContent = `${cards.length} cards`;
+  const grid = document.getElementById('set-cards-grid');
+  renderSetCards(cards, grid);
+}
+
 // ── BROWSE SETS ───────────────────────────────────────────────────
 let allSets = [];
 let currentSetCards = [];
@@ -1351,6 +1400,8 @@ function backToSets() {
 }
 
 async function openSet(set) {
+  currentSetSort = null;
+  document.querySelectorAll('[data-setsort]').forEach(b => b.classList.remove('active'));
   document.getElementById('sets-list-view').style.display = 'none';
   document.getElementById('set-detail-view').style.display = 'block';
 
@@ -1387,11 +1438,7 @@ function renderSetCards(cards, grid) {
 // Filter within set
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('set-filter-input')?.addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    const grid = document.getElementById('set-cards-grid');
-    const filtered = q ? currentSetCards.filter(c => c.name.toLowerCase().includes(q)) : currentSetCards;
-    document.getElementById('set-card-count').textContent = `${filtered.length} cards`;
-    renderSetCards(filtered, grid);
+    applySetSortAndRender();
   });
 });
 
