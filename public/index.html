@@ -813,21 +813,18 @@ async function renderLeaderboard(){
 
   await loadLeaderboard();
 
-  // Batch fetch all top cards in one API call instead of one-by-one
-  const topIds=Object.entries(globalVoteCounts).sort((a,b)=>b[1].count-a[1].count).slice(0,50).map(([id])=>id);
+  // Fetch uncached cards in parallel with concurrency limit of 6
   const uncached = topIds.filter(id=>!cardCache[id]);
-
   if (uncached.length > 0) {
-    try {
-      // Fetch up to 50 cards in a single API call using id filter
-      const idQuery = uncached.map(id => `id:${id}`).join(' OR ');
-      const r = await fetch(`/api/pokemon?path=cards&q=${encodeURIComponent(idQuery)}&pageSize=50`);
-      const d = await r.json();
-      (d.data || []).forEach(card => { cardCache[card.id] = card; });
-    } catch(e) {
-      // Fallback to parallel individual fetches if batch fails
-      await Promise.allSettled(uncached.map(async id=>{
-        try{const r=await fetch(`/api/pokemon?path=cards/${id}`);const d=await r.json();if(d.data)cardCache[id]=d.data;}catch(e){}
+    const CONCURRENCY = 6;
+    for (let i = 0; i < uncached.length; i += CONCURRENCY) {
+      const chunk = uncached.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(chunk.map(async id => {
+        try {
+          const r = await fetch(`/api/pokemon?path=cards/${id}`);
+          const d = await r.json();
+          if (d.data) cardCache[id] = d.data;
+        } catch(e) {}
       }));
     }
   }
@@ -1250,7 +1247,46 @@ function setSort(sort, el) {
   currentSort = sort;
   document.querySelectorAll('.filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+
+  if ((sort === 'price-asc' || sort === 'price-desc') && currentSearchCards.length > 0) {
+    const needsPrices = currentSearchCards.some(c => !c.tcgplayer && !c.cardmarket);
+    if (needsPrices) {
+      el.textContent = el.textContent + ' ⏳';
+      el.disabled = true;
+      fetchSearchCardPrices().then(() => {
+        el.textContent = el.textContent.replace(' ⏳', '');
+        el.disabled = false;
+        applySortAndRender();
+      });
+      return;
+    }
+  }
+
   applySortAndRender();
+}
+
+async function fetchSearchCardPrices() {
+  try {
+    const CONCURRENCY = 6;
+    for (let i = 0; i < currentSearchCards.length; i += CONCURRENCY) {
+      const chunk = currentSearchCards.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(chunk.map(async card => {
+        try {
+          const res = await fetch(`/api/pokemon?path=cards/${card.id}`);
+          const data = await res.json();
+          if (data.data) {
+            const idx = currentSearchCards.findIndex(c => c.id === card.id);
+            if (idx !== -1) {
+              currentSearchCards[idx] = { ...currentSearchCards[idx], tcgplayer: data.data.tcgplayer, cardmarket: data.data.cardmarket };
+              cardCache[card.id] = currentSearchCards[idx];
+            }
+          }
+        } catch(e) {}
+      }));
+    }
+  } catch(e) {
+    console.log('Price fetch failed:', e);
+  }
 }
 
 function clearSort() {
@@ -1317,7 +1353,47 @@ function setSetSort(sort, el) {
   currentSetSort = sort;
   document.querySelectorAll('[data-setsort]').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
+
+  // Price sort needs full card data — fetch it if not already loaded
+  if ((sort === 'price-asc' || sort === 'price-desc') && currentSetCards.length > 0) {
+    const needsPrices = currentSetCards.some(c => !c.tcgplayer && !c.cardmarket);
+    if (needsPrices) {
+      el.textContent = el.textContent + ' ⏳';
+      el.disabled = true;
+      fetchSetCardPrices().then(() => {
+        el.textContent = el.textContent.replace(' ⏳', '');
+        el.disabled = false;
+        applySetSortAndRender();
+      });
+      return;
+    }
+  }
+
   applySetSortAndRender();
+}
+
+async function fetchSetCardPrices() {
+  try {
+    const CONCURRENCY = 6;
+    for (let i = 0; i < currentSetCards.length; i += CONCURRENCY) {
+      const chunk = currentSetCards.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(chunk.map(async card => {
+        try {
+          const res = await fetch(`/api/pokemon?path=cards/${card.id}`);
+          const data = await res.json();
+          if (data.data) {
+            const idx = currentSetCards.findIndex(c => c.id === card.id);
+            if (idx !== -1) {
+              currentSetCards[idx] = { ...currentSetCards[idx], tcgplayer: data.data.tcgplayer, cardmarket: data.data.cardmarket };
+              cardCache[card.id] = currentSetCards[idx];
+            }
+          }
+        } catch(e) {}
+      }));
+    }
+  } catch(e) {
+    console.log('Price fetch failed:', e);
+  }
 }
 
 function clearSetSort() {
