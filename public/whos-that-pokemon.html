@@ -46,7 +46,7 @@ body {
 .gen-btn:hover { background: #33335a; border-color: #7c6aec; transform: scale(1.02); }
 .gen-btn.active { background: #C8FF00; border-color: #7c6aec; }
 .gen-btn .gen-label { font-size: 15px; font-weight: 700; }
-.gen-btn .gen-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+.gen-btn .gen-sub { color: #C8FF00; margin-top: 2px; }
 .gen-btn.all-btn { grid-column: 1 / -1; background: linear-gradient(135deg, #C8FF00, #1a6b4a); border-color: #7c6aec; padding: 16px; }
 .gen-btn.all-btn .gen-label { font-size: 17px; }
 
@@ -312,14 +312,18 @@ body {
 }
 
 .gen-btn.active .gen-label,
-.gen-btn.active .gen-sub {
-  color: #000 !important;
+.gen-btn.active .gen-sub { color: #C8FF00;
 }
 
 .diff-btn.active-easy,
 .diff-btn.active-hard {
   background: #C8FF00 !important;
   border-color: #C8FF00 !important;
+}
+
+.gen-btn.active .gen-label,
+.gen-btn.active .gen-sub {
+  color: #000 !important;
 }
 </style>
 
