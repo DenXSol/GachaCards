@@ -338,7 +338,7 @@ body {
 
 <script>
 
-
+const ALL_POKEMON = [];  // Will be populated dynamically
 
 
 const GEN_INFO = [{"g": 1, "label": "Gen 1", "sub": "Kanto \u00b7 151"}, {"g": 2, "label": "Gen 2", "sub": "Johto \u00b7 100"}, {"g": 3, "label": "Gen 3", "sub": "Hoenn \u00b7 135"}, {"g": 4, "label": "Gen 4", "sub": "Sinnoh \u00b7 107"}, {"g": 5, "label": "Gen 5", "sub": "Unova \u00b7 156"}, {"g": 6, "label": "Gen 6", "sub": "Kalos \u00b7 72"}, {"g": 7, "label": "Gen 7", "sub": "Alola \u00b7 88"}, {"g": 8, "label": "Gen 8", "sub": "Galar \u00b7 96"}, {"g": 9, "label": "Gen 9", "sub": "Paldea \u00b7 120"}, {"g": 0, "label": "ALL", "sub": "1025 Pok\u00e9mon"}];
@@ -712,31 +712,33 @@ inp.addEventListener('blur', () => {
 
 
 
-// Initialize empty Pokemon array
-let ALL_POKEMON = [];
+// ===== DYNAMIC GENERATION LOADER =====
 let loadedGen = null;
 
-// Replace original gen button handler
-const originalShowDifficulty = showDifficulty;
-window.showDifficulty = function(gen) {
-  if (gen === loadedGen && ALL_POKEMON.length > 0) {
-    // Already loaded, show difficulty
-    originalShowDifficulty(gen);
+// Store original selectGen
+const originalSelectGen = window.selectGen;
+
+// Override to load gen data dynamically
+window.selectGen = function(g, el) {
+  if (loadedGen === g && ALL_POKEMON.length > 0) {
+    // Already loaded
+    originalSelectGen(g, el);
   } else {
-    // Load gen file dynamically
-    const genFile = gen === 'all' ? 'gen-data-all.js' : `gen-data-${gen}.js`;
+    // Load gen data first
+    const filename = g === 0 ? 'gen-data-all.js' : `gen-data-${g}.js`;
     const script = document.createElement('script');
     script.onload = () => {
-      loadedGen = gen;
-      console.log(`✅ Loaded Gen ${gen}: ${ALL_POKEMON.length} Pokemon`);
-      originalShowDifficulty(gen);
+      console.log(`✅ Loaded Gen ${g}: ${ALL_POKEMON.length} Pokemon`);
+      loadedGen = g;
+      originalSelectGen(g, el);
     };
-    script.onerror = () => console.error(`Failed to load ${genFile}`);
-    script.src = genFile;
+    script.onerror = () => alert(`Failed to load ${filename}`);
+    script.src = filename;
     document.head.appendChild(script);
   }
 };
 
 </script>
+
 </body>
 </html>
