@@ -415,7 +415,7 @@ body {
 
     <div id="end-screen-inner" style="display:none;">
       <div class="end-emoji" id="end-emoji">🎉</div>
-      <div class="end-title">Round Over!</div>
+      <div class="end-title" id="end-title">Round Over!</div>
       <div class="end-sub" id="end-sub"></div>
       <div class="end-score" id="end-score"></div>
       <div class="end-btns">
@@ -435,6 +435,7 @@ const GEN_INFO = [{"g": 1, "label": "Gen 1", "sub": "Kanto \u00b7 151"}, {"g": 2
 let selectedGen = null, selectedDiff = null;
 let queue = [], current = 0, score = 0, streak = 0, dotResults = [];
 let answered = false;
+let cheatDetected = false;
 
 // ── BUILD GEN GRID ──
 (function() {
@@ -527,6 +528,7 @@ function buildProgress() {
 
 function loadPokemon() {
   answered = false;
+  cheatDetected = false;
   const pk = queue[current];
   const img = document.getElementById('poke-img');
   const mask = document.getElementById('stage-mask');
@@ -716,6 +718,7 @@ function skipPokemon() {
 function endGame() {
   document.getElementById('main-content').style.display = 'none';
   document.getElementById('end-screen-inner').style.display = 'block';
+  document.getElementById('end-title').textContent = 'Round Over!';
   const pct = Math.round((score / queue.length) * 100);
   let emoji = pct === 100 ? '🏆' : pct >= 70 ? '🎉' : pct >= 40 ? '😅' : '💀';
   document.getElementById('end-emoji').textContent = emoji;
@@ -723,6 +726,41 @@ function endGame() {
   const wrong = dotResults.filter(r => r === 'wrong').length;
   document.getElementById('end-score').innerHTML = `<span style="color:#4caf7d">✓ ${score} correct</span> &nbsp; <span style="color:#ef5350">✗ ${wrong} wrong</span>`;
 }
+
+// ── ANTI-CHEAT: tab/window switch detection ──────────────────────
+// If a round is active and unanswered, leaving the tab or the browser
+// window ends the game immediately and calls it out as cheating.
+function triggerCheatEnd() {
+  if (cheatDetected || answered) return;
+  if (document.getElementById('game-screen').style.display !== 'block') return;
+  if (document.getElementById('end-screen-inner').style.display === 'block') return;
+
+  cheatDetected = true;
+  answered = true;
+
+  const guessInput = document.getElementById('guess-input');
+  if (guessInput) guessInput.disabled = true;
+  const submitBtn = document.getElementById('submit-btn');
+  if (submitBtn) submitBtn.disabled = true;
+  document.querySelectorAll('.mc-btn').forEach(b => b.disabled = true);
+  document.getElementById('btn-skip').style.display = 'none';
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
+
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('end-screen-inner').style.display = 'block';
+  document.getElementById('end-title').textContent = '🚫 No Cheating!';
+  document.getElementById('end-emoji').textContent = '🕵️';
+  document.getElementById('end-sub').textContent = 'We noticed you left the tab mid-round — that ends the game.';
+  const wrong = dotResults.filter(r => r === 'wrong').length;
+  document.getElementById('end-score').innerHTML =
+    `<span style="color:#4caf7d">✓ ${score} correct</span> &nbsp; <span style="color:#ef5350">✗ ${wrong} wrong</span> &nbsp; <span style="color:#888">· stopped at round ${current + 1}/${queue.length}</span>`;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) triggerCheatEnd();
+});
+window.addEventListener('blur', triggerCheatEnd);
 
 function replayGame() {
   document.getElementById('main-content').style.display = 'block';
