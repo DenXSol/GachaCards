@@ -815,6 +815,7 @@ async function renderLeaderboard(){
   await loadLeaderboard();
 
   // Fetch uncached cards in parallel with concurrency limit of 6
+  const topIds = Object.keys(globalVoteCounts);
   const uncached = topIds.filter(id=>!cardCache[id]);
   if (uncached.length > 0) {
     const CONCURRENCY = 6;
@@ -1961,7 +1962,14 @@ async function validateAndRefreshSession() {
       return;
     }
 
-    // Session invalid — try to refresh using stored refresh token
+    if (res.status !== 401) {
+      // Server error (e.g. backend/DB temporarily down) — not an auth problem.
+      // Keep the user logged in and just try again next time.
+      console.log('Profile check failed with server error ('+res.status+') — keeping session');
+      return;
+    }
+
+    // Session invalid (401) — try to refresh using stored refresh token
     const refreshToken = localStorage.getItem('gc_refresh_token');
     if (!refreshToken) {
       // No refresh token — log out silently
@@ -1981,8 +1989,12 @@ async function validateAndRefreshSession() {
       localStorage.setItem('gc_session', currentSession);
       localStorage.setItem('gc_refresh_token', data.session.refresh_token);
       await loadMyVotes();
-    } else {
+    } else if (refreshRes.status === 401) {
+      // Refresh token itself rejected — genuinely expired, safe to log out
       silentLogout();
+    } else {
+      // Server error during refresh — keep user logged in, try again later
+      console.log('Session refresh failed with server error ('+refreshRes.status+') — keeping session');
     }
   } catch(e) {
     // Network error — keep user logged in optimistically
