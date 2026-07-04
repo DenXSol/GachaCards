@@ -22,7 +22,7 @@ body {
   padding: 28px 20px;
   max-width: 500px;
   width: 100%;
-  color: #000;
+  color: #C8FF00;
   text-align: center;
 }
 #select-screen h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -41,7 +41,7 @@ body {
   background: #1a1a1f; border: 1.5px solid #333366;
   border-radius: 12px; padding: 14px 10px;
   cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
-  color: #000; text-align: center;
+  color: #C8FF00; text-align: center;
 }
 .gen-btn:hover { background: #33335a; border-color: #7c6aec; transform: scale(1.02); }
 .gen-btn.active { background: #C8FF00; border-color: #7c6aec; }
@@ -57,7 +57,7 @@ body {
 .diff-btn {
   flex: 1; padding: 14px 10px; border-radius: 12px;
   border: 1.5px solid #333366; background: #1a1a1f;
-  color: #000; cursor: pointer; text-align: center;
+  color: #C8FF00; cursor: pointer; text-align: center;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .diff-btn:hover { transform: scale(1.02); }
@@ -105,7 +105,7 @@ body {
   margin-bottom: 14px; padding: 10px; background: #f7f7f7; border-radius: 12px;
 }
 .score-item { text-align: center; }
-.score-num { font-size: 20px; font-weight: 700; color: #0d0d0d; }
+.score-num { font-size: 20px; font-weight: 700; color: #7ba300; }
 .score-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
 .progress { display: flex; gap: 4px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #e0e0e0; transition: background 0.3s; }
@@ -232,7 +232,7 @@ body {
 /* ── END ── */
 #end-screen-inner { padding: 20px 0; }
 .end-emoji { font-size: 52px; margin-bottom: 10px; }
-.end-title { font-size: 24px; font-weight: 700; color: #0d0d0d; margin-bottom: 6px; }
+.end-title { font-size: 24px; font-weight: 700; color: #7ba300; margin-bottom: 6px; }
 .end-sub { font-size: 14px; color: #888; margin-bottom: 8px; }
 .end-score {
   font-size: 32px; font-weight: 700; color: #7c6aec; margin-bottom: 20px;
@@ -300,8 +300,41 @@ header .nav-btn:hover {
   color: #C8FF00;
 }
 
+header .nav-btn.active {
+  border-color: #C8FF00;
+  color: #C8FF00;
+  cursor: default;
+}
+
+header .nav-play-btn {
+  background: #C8FF00;
+  color: #000;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+header .nav-play-btn:hover { opacity: 0.85; }
+
+/* Fix layout: body used to flex-center a single card, but now header
+   is a sibling above it — switch to normal block flow and center the
+   screens themselves so the sticky header can span the full width. */
 body {
   background: #000 !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+#select-screen, #game-screen {
+  margin: 32px auto;
+  width: calc(100% - 32px);
 }
 
 /* Button color theme */
@@ -331,7 +364,12 @@ body {
   <a href="index.html" class="logo">← GACHA</a>
   <div class="nav-right">
     <a href="index.html" class="nav-btn">Most Wanted</a>
-    <a href="index.html" class="nav-btn">Back</a>
+    <a href="index.html" class="nav-btn">Search Cards</a>
+    <a href="index.html" class="nav-btn">Browse Sets</a>
+    <span class="nav-btn active">Who's That ⚡</span>
+    <a href="index.html" class="nav-btn">This or That</a>
+    <a href="index.html" class="nav-btn">My Profile</a>
+    <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">Play Gacha</a>
   </div>
 </header>
 
