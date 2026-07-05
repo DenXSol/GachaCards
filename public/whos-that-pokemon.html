@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Who's That Pokémon?</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
+@font-face{font-family:'Airstrike';src:url('/fonts/airstrike.ttf') format('truetype');font-weight:400;font-display:swap;}
+@font-face{font-family:'Airstrike';src:url('/fonts/airstrike-bold.ttf') format('truetype');font-weight:700;font-display:swap;}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #000;
   min-height: 100vh;
   display: flex;
@@ -22,7 +25,7 @@ body {
   padding: 28px 20px;
   max-width: 500px;
   width: 100%;
-  color: #C8FF00;
+  color: #D3F015;
   text-align: center;
 }
 #select-screen h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
@@ -41,13 +44,13 @@ body {
   background: #1a1a1f; border: 1.5px solid #333366;
   border-radius: 12px; padding: 14px 10px;
   cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
-  color: #C8FF00; text-align: center;
+  color: #D3F015; text-align: center;
 }
 .gen-btn:hover { background: #33335a; border-color: #7c6aec; transform: scale(1.02); }
-.gen-btn.active { background: #C8FF00; border-color: #7c6aec; }
+.gen-btn.active { background: #ECFF6F; border-color: #7c6aec; }
 .gen-btn .gen-label { font-size: 15px; font-weight: 700; }
-.gen-btn .gen-sub { color: #C8FF00; margin-top: 2px; }
-.gen-btn.all-btn { grid-column: 1 / -1; background: linear-gradient(135deg, #C8FF00, #1a6b4a); border-color: #7c6aec; padding: 16px; }
+.gen-btn .gen-sub { color: #D3F015; margin-top: 2px; }
+.gen-btn.all-btn { grid-column: 1 / -1; background: linear-gradient(135deg, #D3F015, #1a6b4a); border-color: #7c6aec; padding: 16px; }
 .gen-btn.all-btn .gen-label { font-size: 17px; }
 
 /* ── DIFFICULTY ── */
@@ -57,7 +60,7 @@ body {
 .diff-btn {
   flex: 1; padding: 14px 10px; border-radius: 12px;
   border: 1.5px solid #333366; background: #1a1a1f;
-  color: #C8FF00; cursor: pointer; text-align: center;
+  color: #D3F015; cursor: pointer; text-align: center;
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 .diff-btn:hover { transform: scale(1.02); }
@@ -105,7 +108,7 @@ body {
   margin-bottom: 14px; padding: 10px; background: #f7f7f7; border-radius: 12px;
 }
 .score-item { text-align: center; }
-.score-num { font-size: 20px; font-weight: 700; color: #7ba300; }
+.score-num { font-size: 20px; font-weight: 700; color: #8a9c0e; }
 .score-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
 .progress { display: flex; gap: 4px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #e0e0e0; transition: background 0.3s; }
@@ -232,7 +235,7 @@ body {
 /* ── END ── */
 #end-screen-inner { padding: 20px 0; }
 .end-emoji { font-size: 52px; margin-bottom: 10px; }
-.end-title { font-size: 24px; font-weight: 700; color: #7ba300; margin-bottom: 6px; }
+.end-title { font-size: 24px; font-weight: 700; color: #8a9c0e; margin-bottom: 6px; }
 .end-sub { font-size: 14px; color: #888; margin-bottom: 8px; }
 .end-score {
   font-size: 32px; font-weight: 700; color: #7c6aec; margin-bottom: 20px;
@@ -260,11 +263,11 @@ header {
 }
 
 header .logo {
-  font-family: "Bebas Neue", sans-serif;
+  font-family: 'Airstrike', sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #C8FF00;
+  color: #D3F015;
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -296,18 +299,18 @@ header .nav-btn {
 }
 
 header .nav-btn:hover {
-  border-color: #C8FF00;
-  color: #C8FF00;
+  border-color: #D3F015;
+  color: #D3F015;
 }
 
 header .nav-btn.active {
-  border-color: #C8FF00;
-  color: #C8FF00;
+  border-color: #D3F015;
+  color: #D3F015;
   cursor: default;
 }
 
 header .nav-play-btn {
-  background: #C8FF00;
+  background: #ECFF6F;
   color: #000;
   border: none;
   padding: 6px 14px;
@@ -339,19 +342,20 @@ body {
 
 /* Button color theme */
 .gen-btn.active {
-  background: #C8FF00 !important;
-  border-color: #C8FF00 !important;
+  background: #ECFF6F !important;
+  border-color: #ECFF6F !important;
   color: #000 !important;
 }
 
 .gen-btn.active .gen-label,
-.gen-btn.active .gen-sub { color: #C8FF00;
+.gen-btn.active .gen-sub { color: #D3F015;
 }
 
 .diff-btn.active-easy,
 .diff-btn.active-hard {
-  background: #C8FF00 !important;
-  border-color: #C8FF00 !important;
+  background: #ECFF6F !important;
+  border-color: #ECFF6F !important;
+  color: #000 !important;
 }
 
 .gen-btn.active .gen-label,
@@ -361,14 +365,14 @@ body {
 </style>
 
 <header>
-  <a href="index.html" class="logo">← GACHA</a>
+  <a href="/" class="logo">← GACHA</a>
   <div class="nav-right">
-    <a href="index.html" class="nav-btn">Most Wanted</a>
-    <a href="index.html" class="nav-btn">Search Cards</a>
-    <a href="index.html" class="nav-btn">Browse Sets</a>
+    <a href="/" class="nav-btn">Most Wanted</a>
+    <a href="/" class="nav-btn">Search Cards</a>
+    <a href="/" class="nav-btn">Browse Sets</a>
     <span class="nav-btn active">Who's That ⚡</span>
-    <a href="index.html" class="nav-btn">This or That</a>
-    <a href="index.html" class="nav-btn">My Profile</a>
+    <a href="/" class="nav-btn">This or That</a>
+    <a href="/" class="nav-btn">My Profile</a>
     <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">Play Gacha</a>
   </div>
 </header>
