@@ -558,6 +558,47 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .btn-change:hover { background: #e5e5e5; }
 
 #select-screen, #game-screen { margin: 32px auto; }
+
+/* WTP LAYOUT + LEADERBOARD */
+.wtp-layout { display: flex; gap: 24px; align-items: flex-start; justify-content: center; }
+.wtp-main { flex: 0 0 auto; }
+.wtp-leaderboard-panel {
+  flex: 0 0 300px; width: 300px; margin: 32px 0;
+  background: #0d0d0d; border: 1px solid #1a1a1f; border-radius: 20px;
+  padding: 20px; color: #fff; align-self: flex-start;
+}
+.wtp-lb-title {
+  font-family: 'Airstrike', sans-serif; font-size: 18px; color: #D3F015;
+  margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px;
+}
+.wtp-lb-title span { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: #888; font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em; }
+.wtp-lb-empty { font-size: 13px; color: #888; padding: 16px 0; text-align: center; }
+.wtp-lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a1a1f; font-size: 12px; }
+.wtp-lb-row:last-child { border-bottom: none; }
+.wtp-lb-rank { font-family: 'Airstrike', sans-serif; font-size: 15px; color: #666; width: 20px; flex-shrink: 0; }
+.wtp-lb-row:nth-child(1) .wtp-lb-rank { color: #D3F015; }
+.wtp-lb-row:nth-child(2) .wtp-lb-rank { color: #aaa; }
+.wtp-lb-row:nth-child(3) .wtp-lb-rank { color: #cd7f32; }
+.wtp-lb-info { flex: 1; min-width: 0; }
+.wtp-lb-name { font-weight: 700; color: #fff; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wtp-lb-name:hover { color: #D3F015; text-decoration: underline; }
+.wtp-lb-name.anon { cursor: default; }
+.wtp-lb-name.anon:hover { color: #fff; text-decoration: none; }
+.wtp-lb-meta { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1px; }
+.wtp-lb-stats { text-align: right; flex-shrink: 0; }
+.wtp-lb-time { font-family: 'Airstrike', sans-serif; font-size: 14px; color: #D3F015; }
+.wtp-lb-score { font-size: 10px; color: #888; }
+.wtp-submit-box { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0; text-align: center; }
+.wtp-submit-box input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Space Grotesk', sans-serif; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; }
+.wtp-submit-box button { background: #7c6aec; color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.wtp-submit-box button:hover { background: #6a58d4; }
+.wtp-submit-note { font-size: 12px; color: #888; margin-top: 6px; }
+.wtp-submit-note a { color: #7c6aec; cursor: pointer; text-decoration: underline; }
+.wtp-submit-done { font-size: 13px; color: #4caf7d; font-weight: 600; }
+@media (max-width: 900px) {
+  .wtp-layout { flex-direction: column; align-items: center; }
+  .wtp-leaderboard-panel { width: 100%; max-width: 460px; margin: 0 auto 32px; }
+}
 </style>
 </head>
 <body>
@@ -861,6 +902,8 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 
 <!-- WHO'S THAT POKEMON -->
 <div class="view" id="view-wtp">
+<div class="wtp-layout">
+<div class="wtp-main">
 <!-- GEN + DIFFICULTY SELECT -->
 <div id="select-screen">
   <h1>Who's That Pokémon?</h1>
@@ -943,6 +986,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       <div class="end-title" id="end-title">Round Over!</div>
       <div class="end-sub" id="end-sub"></div>
       <div class="end-score" id="end-score"></div>
+      <div class="wtp-submit-box" id="wtp-submit-box" style="display:none;"></div>
       <div class="end-btns">
         <button class="btn-replay" onclick="replayGame()">Play again</button>
         <button class="btn-change" onclick="wtpGoBack()">Change options</button>
@@ -951,6 +995,13 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
   </div>
 </div>
 
+</div>
+<!-- WTP LEADERBOARD -->
+<div class="wtp-leaderboard-panel">
+  <div class="wtp-lb-title">🏆 Top 10<span>Fastest completions</span></div>
+  <div id="wtp-lb-list"><div class="wtp-lb-empty">Loading…</div></div>
+</div>
+</div>
 
 </div>
 
@@ -2365,6 +2416,7 @@ const ALL_POKEMON = [];  // Will be populated dynamically
 const GEN_INFO = [{"g": 1, "label": "Gen 1", "sub": "Kanto \u00b7 151"}, {"g": 2, "label": "Gen 2", "sub": "Johto \u00b7 100"}, {"g": 3, "label": "Gen 3", "sub": "Hoenn \u00b7 135"}, {"g": 4, "label": "Gen 4", "sub": "Sinnoh \u00b7 107"}, {"g": 5, "label": "Gen 5", "sub": "Unova \u00b7 156"}, {"g": 6, "label": "Gen 6", "sub": "Kalos \u00b7 72"}, {"g": 7, "label": "Gen 7", "sub": "Alola \u00b7 88"}, {"g": 8, "label": "Gen 8", "sub": "Galar \u00b7 96"}, {"g": 9, "label": "Gen 9", "sub": "Paldea \u00b7 120"}, {"g": 0, "label": "ALL", "sub": "1025 Pok\u00e9mon"}];
 let selectedGen = null, selectedDiff = null;
 let queue = [], current = 0, score = 0, streak = 0, dotResults = [];
+let roundStartTime = null;
 let answered = false;
 let cheatDetected = false;
 
@@ -2428,6 +2480,7 @@ function startGame() {
   const pool = getPool();
   queue = shuffle(pool).slice(0, 10);
   current = 0; score = 0; streak = 0; dotResults = [];
+  roundStartTime = Date.now();
 
   const genInfo = GEN_INFO.find(x => x.g === selectedGen);
   document.getElementById('gen-tag').textContent = genInfo.label;
@@ -2479,7 +2532,6 @@ function loadPokemon() {
   document.getElementById('poke-name').className = '';
   document.getElementById('poke-name').textContent = '';
   document.getElementById('type-badge').className = 'type-badge';
-  document.getElementById('hint').textContent = 'Pokémon #' + String(pk.num).padStart(3, '0');
   document.getElementById('result-msg').textContent = '';
   document.getElementById('result-msg').className = '';
   document.getElementById('btn-next').style.display = 'none';
@@ -2662,7 +2714,115 @@ function endGame() {
   document.getElementById('end-sub').textContent = `${selectedDiff === 'easy' ? 'Easy' : 'Hard'} mode · ${GEN_INFO.find(x=>x.g===selectedGen).label}`;
   const wrong = dotResults.filter(r => r === 'wrong').length;
   document.getElementById('end-score').innerHTML = `<span style="color:#4caf7d">✓ ${score} correct</span> &nbsp; <span style="color:#ef5350">✗ ${wrong} wrong</span>`;
+
+  const elapsedMs = roundStartTime ? Date.now() - roundStartTime : null;
+  if (elapsedMs) showWtpSubmitBox(elapsedMs);
 }
+
+// ── LEADERBOARD ───────────────────────────────────────────────────
+function wtpEscapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+
+function formatWtpTime(ms) {
+  const totalSec = ms / 1000;
+  if (totalSec < 60) return totalSec.toFixed(1) + 's';
+  const m = Math.floor(totalSec / 60);
+  const s = Math.floor(totalSec % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+function wtpGenLabel(g) {
+  const info = GEN_INFO.find(x => x.g === g);
+  return info ? info.label : ('Gen ' + g);
+}
+
+function showWtpSubmitBox(elapsedMs) {
+  const box = document.getElementById('wtp-submit-box');
+  if (!box) return;
+  box.style.display = 'block';
+
+  if (currentUser) {
+    box.innerHTML = `<div class="wtp-submit-done">Saving your run as <strong>${wtpEscapeHtml(currentUser.username)}</strong>…</div>`;
+    submitWtpScore(elapsedMs, null);
+    return;
+  }
+
+  box.innerHTML = `
+    <input type="text" id="wtp-name-input" placeholder="Enter a name for the leaderboard" maxlength="24" />
+    <button onclick="submitWtpScoreFromInput(${elapsedMs})">Submit score</button>
+    <div class="wtp-submit-note">or <a onclick="openAuth('login')">log in</a> to save it to your profile</div>
+  `;
+}
+
+function submitWtpScoreFromInput(elapsedMs) {
+  const input = document.getElementById('wtp-name-input');
+  const name = (input && input.value || '').trim();
+  if (!name) { if (input) input.focus(); return; }
+  submitWtpScore(elapsedMs, name);
+}
+
+async function submitWtpScore(elapsedMs, displayName) {
+  const box = document.getElementById('wtp-submit-box');
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (currentUser && currentSession) headers['Authorization'] = 'Bearer ' + currentSession;
+    const res = await fetch('/api/wtp-leaderboard', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        mode: selectedDiff, gen: selectedGen, score, total: queue.length,
+        time_ms: Math.round(elapsedMs), display_name: displayName,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { if (box) box.innerHTML = `<div class="wtp-submit-note">${wtpEscapeHtml(data.error || 'Could not submit score.')}</div>`; return; }
+    if (box) box.innerHTML = `<div class="wtp-submit-done">✓ Added to the leaderboard!</div>`;
+    loadWtpLeaderboard();
+  } catch (e) {
+    if (box) box.innerHTML = `<div class="wtp-submit-note">Could not submit score.</div>`;
+  }
+}
+
+async function loadWtpLeaderboard() {
+  const list = document.getElementById('wtp-lb-list');
+  try {
+    const res = await fetch('/api/wtp-leaderboard');
+    const data = await res.json();
+    renderWtpLeaderboard(data.leaderboard || []);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="wtp-lb-empty">Couldn\'t load leaderboard.</div>';
+  }
+}
+
+function renderWtpLeaderboard(entries) {
+  const list = document.getElementById('wtp-lb-list');
+  if (!list) return;
+  if (!entries.length) { list.innerHTML = '<div class="wtp-lb-empty">No scores yet — be the first!</div>'; return; }
+  list.innerHTML = entries.map((e, i) => {
+    const safeName = wtpEscapeHtml(e.display_name);
+    const nameHtml = e.user_id
+      ? `<span class="wtp-lb-name" onclick="viewUserProfile('${safeName.replace(/'/g, "\\'")}')">${safeName}</span>`
+      : `<span class="wtp-lb-name anon">${safeName}</span>`;
+    return `
+      <div class="wtp-lb-row">
+        <div class="wtp-lb-rank">#${i + 1}</div>
+        <div class="wtp-lb-info">
+          ${nameHtml}
+          <div class="wtp-lb-meta">${e.mode === 'easy' ? 'Easy' : 'Hard'} · ${wtpEscapeHtml(wtpGenLabel(e.gen))}</div>
+        </div>
+        <div class="wtp-lb-stats">
+          <div class="wtp-lb-time">${formatWtpTime(e.time_ms)}</div>
+          <div class="wtp-lb-score">${e.score}/${e.total}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+loadWtpLeaderboard();
 
 // ── ANTI-CHEAT: tab/window switch detection ──────────────────────
 // If a round is active and unanswered, leaving the tab or the browser
