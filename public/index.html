@@ -2709,8 +2709,6 @@ function replayGame() {
   updateScores();
   loadPokemon();
 }// ── AUTOCOMPLETE ──
-// Build name list once from ALL_POKEMON
-const ALL_NAMES = ALL_POKEMON.map(p => p.name);
 let acIndex = -1;
 
 const inp = document.getElementById('guess-input');
@@ -2746,7 +2744,7 @@ function openDropdown(matches, query) {
 inp.addEventListener('input', () => {
   const q = inp.value.trim().toLowerCase();
   if (!q) { closeDropdown(); return; }
-  const pool = selectedGen === 0 ? ALL_NAMES : ALL_POKEMON.filter(p => p.gen === selectedGen).map(p => p.name);
+  const pool = (selectedGen === 0 ? ALL_POKEMON : ALL_POKEMON.filter(p => p.gen === selectedGen)).map(p => p.name);
   const matches = pool.filter(n => n.toLowerCase().startsWith(q)).slice(0, 8);
   openDropdown(matches, q);
 });
@@ -2779,28 +2777,52 @@ inp.addEventListener('blur', () => {
 
 
 // ===== DYNAMIC GENERATION LOADER =====
-let loadedGen = null;
+// Each generation's data lives in its own gen-data-N.js file. "ALL" mode
+// doesn't need its own combined file — it just loads whichever of the 9
+// per-gen files haven't been loaded yet and pools them together.
+// Loads are cached by promise (not just a "done" flag) so that clicking
+// the same gen button again before it finishes never triggers a second,
+// duplicate <script> load.
+const genLoadPromises = new Map();
 
 // Store original selectGen
 const originalSelectGen = window.selectGen;
 
+function loadGenScript(g) {
+  if (genLoadPromises.has(g)) return genLoadPromises.get(g);
+  const promise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.onload = () => resolve();
+    script.onerror = () => {
+      genLoadPromises.delete(g); // allow retry on failure
+      reject(new Error(`Failed to load gen-data-${g}.js`));
+    };
+    script.src = `gen-data-${g}.js`;
+    document.head.appendChild(script);
+  });
+  genLoadPromises.set(g, promise);
+  return promise;
+}
+
 // Override to load gen data dynamically
 window.selectGen = function(g, el) {
-  if (loadedGen === g && ALL_POKEMON.length > 0) {
-    // Already loaded
-    originalSelectGen(g, el);
+  if (g === 0) {
+    // ALL: make sure every generation's file is loaded (or loading)
+    const all = [];
+    for (let i = 1; i <= 9; i++) all.push(loadGenScript(i));
+    Promise.all(all)
+      .then(() => {
+        console.log(`✅ Loaded ALL: ${ALL_POKEMON.length} Pokemon`);
+        originalSelectGen(g, el);
+      })
+      .catch(err => alert(err.message));
   } else {
-    // Load gen data first
-    const filename = g === 0 ? 'gen-data-all.js' : `gen-data-${g}.js`;
-    const script = document.createElement('script');
-    script.onload = () => {
-      console.log(`✅ Loaded Gen ${g}: ${ALL_POKEMON.length} Pokemon`);
-      loadedGen = g;
-      originalSelectGen(g, el);
-    };
-    script.onerror = () => alert(`Failed to load ${filename}`);
-    script.src = filename;
-    document.head.appendChild(script);
+    loadGenScript(g)
+      .then(() => {
+        console.log(`✅ Loaded Gen ${g}: ${ALL_POKEMON.length} Pokemon`);
+        originalSelectGen(g, el);
+      })
+      .catch(err => alert(err.message));
   }
 };
 
