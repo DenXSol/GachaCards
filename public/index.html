@@ -637,7 +637,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     <button onclick="showView('sets',this)">Browse Sets</button>
     <button onclick="showView('wtp',this)">WHO'S THAT ⚡</button>
     <button onclick="showView('thisorthat',this)">⚡ This or That</button>
-    <button id="nav-pfp" onclick="showView('pfp',this)">🏴‍☠️ Just Pulled PFP</button>
+    <button id="nav-pfp" onclick="showView('pfp',this)">🏴‍☠️ Slab Lab</button>
     <button id="nav-profile" style="display:none" onclick="showView('profile',this)">My Profile</button>
     <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">🎴 Play Gacha</a>
   </nav>
@@ -3100,7 +3100,6 @@ const PFP_LABEL_FIELDS = {
 };
 function pfpFieldTop(f){ return f.y; }
 
-const PFP_LOCATIONS = ['EAST BLUE','WEST BLUE','NORTH BLUE','SOUTH BLUE','GRAND LINE','PARADISE','NEW WORLD','SKYPIEA','WANO','FISHMAN I.'];
 const PFP_GRADE_NAMES = {10:'GEM MT',9:'MINT',8:'NM-MT',7:'NM',6:'EX-MT',5:'EX',4:'VG-EX',3:'VG',2:'GOOD',1:'PR'};
 const PFP_GRADE_WEIGHTS = [[1,2],[2,2],[3,3],[4,4],[5,5],[6,6],[7,10],[8,15],[9,20],[10,25]];
 
@@ -3256,7 +3255,6 @@ async function generatePfp(){
     const grade = pfpRandomGrade();
     const gradeName = PFP_GRADE_NAMES[grade];
     const serial = pfpRandomSerial();
-    const location = PFP_LOCATIONS[Math.floor(Math.random()*PFP_LOCATIONS.length)];
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
     // 1. background
@@ -3266,7 +3264,7 @@ async function generatePfp(){
     // 3. PSA slab + blank label backing
     ctx.drawImage(slab, PFP_SLAB_POS.x, PFP_SLAB_POS.y, PFP_SLAB_POS.w, PFP_SLAB_POS.h);
     // 4. dynamic label text
-    pfpDrawLabel(ctx, { year, handle, location, counter, grade, gradeName, serial });
+    pfpDrawLabel(ctx, { year, handle, counter, grade, gradeName, serial });
     // 5. barcode
     pfpDrawBarcode(ctx, serial);
     // 6. glossy plastic case overlay, drawn last
@@ -3289,7 +3287,7 @@ function pfpDrawLabel(ctx, d){
 
   // Left column: year/handle/location, GACHA, SPECIAL — all uniform size/weight/color
   ctx.textAlign = 'left';
-  const topLine = `${d.year} @${d.handle} ${d.location}`.toUpperCase();
+  const topLine = `${d.year} ${d.handle}`.toUpperCase();
   pfpFitText(ctx, topLine, f.topLine.w, PFP_LABEL_FONT_SIZE, 13, s=>`400 ${s}px 'Space Grotesk'`);
   ctx.fillText(topLine, f.topLine.x, pfpFieldTop(f.topLine));
 
