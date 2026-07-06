@@ -12,11 +12,12 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // TOP 10, fastest time first
+    // TOP 10 — highest score first, fastest time breaks ties within the same score
     if (req.method === 'GET') {
       const { data, error } = await supabase
         .from('wtp_leaderboard')
         .select('id, user_id, display_name, mode, gen, score, total, time_ms, created_at')
+        .order('score', { ascending: false })
         .order('time_ms', { ascending: true })
         .limit(10);
       if (error) return res.status(500).json({ error: error.message });
