@@ -3086,7 +3086,7 @@ const PFP_FRAME_POS     = { x: 241, y: 284, w: 639, h: 1021 };
 // two columns (left: date/handle/location, name, SPECIAL, barcode;
 // right: cert #, grade name, grade number, serial).
 const PFP_LABEL_FONT_SIZE = 23;
-const PFP_LABEL_FONT = `700 ${PFP_LABEL_FONT_SIZE}px 'Space Grotesk'`;
+const PFP_LABEL_FONT = `400 ${PFP_LABEL_FONT_SIZE}px 'Space Grotesk'`;
 const PFP_LABEL_COLOR = '#000000';
 const PFP_LABEL_FIELDS = {
   topLine:   { x: 336, y: 369, w: 356, h: 38 },
@@ -3289,8 +3289,8 @@ function pfpDrawLabel(ctx, d){
 
   // Left column: year/handle/location, GACHA, SPECIAL — all uniform size/weight/color
   ctx.textAlign = 'left';
-  const topLine = `${d.year} · @${d.handle} · ${d.location}`;
-  pfpFitText(ctx, topLine, f.topLine.w, PFP_LABEL_FONT_SIZE, 13, s=>`700 ${s}px 'Space Grotesk'`);
+  const topLine = `${d.year} @${d.handle} ${d.location}`.toUpperCase();
+  pfpFitText(ctx, topLine, f.topLine.w, PFP_LABEL_FONT_SIZE, 13, s=>`400 ${s}px 'Space Grotesk'`);
   ctx.fillText(topLine, f.topLine.x, pfpFieldTop(f.topLine));
 
   ctx.font = PFP_LABEL_FONT;
