@@ -65,12 +65,23 @@ module.exports = async function handler(req, res) {
 
     if (!name) return res.status(400).json({ error: 'A name is required.' });
 
-    const { data, error } = await supabase.from('wtp_leaderboard').insert({
-      user_id, display_name: name, mode, gen, score, total, time_ms,
-    }).select().single();
+    // Only keeps this run if it beats the player's existing best for this
+    // mode+gen (higher score, or same score with a faster time). Otherwise
+    // their current best is left untouched and returned as-is — this is what
+    // stops repeat plays from flooding the leaderboard with duplicate rows.
+    const { data, error } = await supabase.rpc('submit_wtp_score', {
+      p_user_id: user_id,
+      p_display_name: name,
+      p_mode: mode,
+      p_gen: gen,
+      p_score: score,
+      p_total: total,
+      p_time_ms: time_ms,
+    });
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json({ entry: data });
+    const isNewBest = !!data && data.score === score && data.time_ms === time_ms;
+    return res.status(200).json({ entry: data, isNewBest });
 
   } catch (err) {
     console.error('WTP leaderboard error:', err);

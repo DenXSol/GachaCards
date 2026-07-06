@@ -2908,7 +2908,11 @@ async function submitWtpScore(elapsedMs, displayName) {
     });
     const data = await res.json();
     if (!res.ok) { if (box) box.innerHTML = `<div class="wtp-submit-note">${wtpEscapeHtml(data.error || 'Could not submit score.')}</div>`; return; }
-    if (box) box.innerHTML = `<div class="wtp-submit-done">✓ Added to the leaderboard!</div>`;
+    if (box) {
+      box.innerHTML = data.isNewBest
+        ? `<div class="wtp-submit-done">🏆 New personal best — added to the leaderboard!</div>`
+        : `<div class="wtp-submit-done">Nice run! Your best for this mode is still ${formatWtpTime(data.entry?.time_ms || 0)} · ${data.entry?.score ?? '?'}/${data.entry?.total ?? '?'}.</div>`;
+    }
     loadWtpLeaderboard();
   } catch (e) {
     if (box) box.innerHTML = `<div class="wtp-submit-note">Could not submit score.</div>`;
