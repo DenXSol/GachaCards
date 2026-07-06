@@ -599,6 +599,32 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
   .wtp-layout { flex-direction: column; align-items: center; }
   .wtp-leaderboard-panel { width: 100%; max-width: 460px; margin: 0 auto 32px; }
 }
+
+/* JUST PULLED PFP */
+.pfp-layout{display:flex;gap:32px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+.pfp-controls{flex:0 0 340px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;}
+.pfp-field{margin-bottom:18px;}
+.pfp-field label{display:block;font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.pfp-field input[type="text"],.pfp-field input[type="number"]{width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;box-sizing:border-box;transition:border-color 0.15s;}
+.pfp-field input[type="text"]:focus,.pfp-field input[type="number"]:focus{border-color:var(--accent-border);}
+.pfp-field input[type="file"]{width:100%;font-family:var(--font-body);font-size:12px;color:var(--muted2);}
+.pfp-photo-preview{margin-top:10px;width:100%;aspect-ratio:1/1;border-radius:10px;border:1px dashed var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted2);overflow:hidden;}
+.pfp-photo-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+.pfp-generate-btn{width:100%;background:var(--primary);border:none;color:#000;font-family:var(--font-body);font-size:14px;font-weight:700;padding:13px;border-radius:10px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.pfp-generate-btn:hover{opacity:0.85;}
+.pfp-generate-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.pfp-status{margin-top:12px;font-size:12px;color:var(--muted2);min-height:16px;}
+.pfp-status.error{color:#ef5350;}
+.pfp-status.success{color:#4caf7d;}
+.pfp-preview-wrap{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pfp-preview-wrap canvas{width:340px;height:auto;border-radius:12px;background:#111;border:1px solid var(--border);}
+.pfp-download-btn{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 26px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
+.pfp-download-btn:hover{opacity:0.85;}
+@media (max-width: 900px) {
+  .pfp-layout { flex-direction: column; align-items: center; }
+  .pfp-controls { width: 100%; max-width: 420px; }
+  .pfp-preview-wrap canvas { width: 280px; }
+}
 </style>
 </head>
 <body>
@@ -611,6 +637,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     <button onclick="showView('sets',this)">Browse Sets</button>
     <button onclick="showView('wtp',this)">WHO'S THAT ⚡</button>
     <button onclick="showView('thisorthat',this)">⚡ This or That</button>
+    <button id="nav-pfp" onclick="showView('pfp',this)">🏴‍☠️ Just Pulled PFP</button>
     <button id="nav-profile" style="display:none" onclick="showView('profile',this)">My Profile</button>
     <a href="https://pull.gacha.game/play/packs/?utm_source=t.co&utm_medium=social&utm_campaign=GCRD" target="_blank" class="nav-play-btn">🎴 Play Gacha</a>
   </nav>
@@ -639,6 +666,39 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     </div>
   </div>
   <div class="lb-grid" id="lb-grid"></div>
+</div>
+
+<!-- JUST PULLED PFP -->
+<div class="view" id="view-pfp">
+  <div class="page-header">
+    <div>
+      <h1>JUST <span>PULLED</span></h1>
+      <div class="page-sub">Make your own wanted-poster PFP</div>
+    </div>
+  </div>
+  <div class="pfp-layout">
+    <div class="pfp-controls">
+      <div class="pfp-field">
+        <label>Your photo (square works best)</label>
+        <input type="file" id="pfp-photo-input" accept="image/*" onchange="onPfpPhotoChange(event)"/>
+        <div class="pfp-photo-preview" id="pfp-photo-preview">No photo yet</div>
+      </div>
+      <div class="pfp-field">
+        <label>Your @handle</label>
+        <input type="text" id="pfp-handle-input" placeholder="@yourhandle" maxlength="20"/>
+      </div>
+      <div class="pfp-field">
+        <label>Year you joined X</label>
+        <input type="number" id="pfp-year-input" placeholder="2019" min="2006" max="2026"/>
+      </div>
+      <button class="pfp-generate-btn" id="pfp-generate-btn" onclick="generatePfp()">Generate Wanted Poster</button>
+      <div class="pfp-status" id="pfp-status"></div>
+    </div>
+    <div class="pfp-preview-wrap">
+      <canvas id="pfp-canvas" width="1122" height="1402"></canvas>
+      <button class="pfp-download-btn" id="pfp-download-btn" style="display:none" onclick="downloadPfp()">⬇ Download PNG</button>
+    </div>
+  </div>
 </div>
 
 <!-- SEARCH -->
@@ -1170,7 +1230,7 @@ async function loadLeaderboard(){
 }
 
 // ── VIEW SWITCHER ─────────────────────────────────────────────────
-function showView(name,btn){
+function showView(name,btn,skipPush){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
@@ -1179,7 +1239,23 @@ function showView(name,btn){
   if(name==='profile')renderProfile();
   if(name==='sets')renderSets();
   if(name==='thisorthat')initTOTView();
+  if(name==='pfp')initPfpView();
+  if(!skipPush){
+    const wantPath = name==='pfp' ? '/PFP' : '/';
+    if(window.location.pathname.toLowerCase()!==wantPath.toLowerCase()){
+      history.pushState({view:name},'',wantPath);
+    }
+  }
 }
+
+window.addEventListener('popstate',()=>{
+  const p=window.location.pathname.replace(/\/+$/,'').toLowerCase();
+  if(p==='/pfp'){
+    showView('pfp',document.getElementById('nav-pfp'),true);
+  }else{
+    showView('leaderboard',document.querySelector('nav button'),true);
+  }
+});
 
 // ── LEADERBOARD ───────────────────────────────────────────────────
 async function renderLeaderboard(){
@@ -2405,6 +2481,14 @@ validateAndRefreshSession();
 loadGachaInventory();
 renderLeaderboard();
 searchCards();
+
+// Deep-link routing: /PFP opens the Just Pulled PFP generator directly
+(function(){
+  const p=window.location.pathname.replace(/\/+$/,'').toLowerCase();
+  if(p==='/pfp'){
+    showView('pfp',document.getElementById('nav-pfp'),true);
+  }
+})();
 </script>
 <script>
 // ===== WHO'S THAT POKEMON (merged view) =====
@@ -2986,6 +3070,262 @@ window.selectGen = function(g, el) {
   }
 };
 
+</script>
+<script>
+// ===== JUST PULLED PFP GENERATOR =====
+const PFP_ASSET_BASE = 'https://raw.githubusercontent.com/DenXSol/GachaCards/main/assets/';
+const PFP_BG_URL    = PFP_ASSET_BASE + 'backgrounds/PFPMaker.png';
+const PFP_SLAB_URL  = PFP_ASSET_BASE + 'bases/PFPslab.png';
+const PFP_FRAME_URL = PFP_ASSET_BASE + 'overlays/PSAframePFP.png';
+
+const PFP_PHOTO_SLOT    = { x: 362, y: 679, w: 400, h: 400 };
+const PFP_SLAB_POS      = { x: 271, y: 296, w: 581, h: 981 };
+const PFP_FRAME_POS     = { x: 241, y: 284, w: 639, h: 1021 };
+// Exact per-field positions read from the user's Figma layers (frame 2147225694),
+// where each field was placed by hand: uniform 23px, black, one row per field,
+// two columns (left: date/handle/location, name, SPECIAL, barcode;
+// right: cert #, grade name, grade number, serial).
+const PFP_LABEL_FONT_SIZE = 23;
+const PFP_LABEL_FONT = `700 ${PFP_LABEL_FONT_SIZE}px 'Space Grotesk'`;
+const PFP_LABEL_COLOR = '#000000';
+const PFP_LABEL_FIELDS = {
+  topLine:   { x: 336, y: 369, w: 356, h: 38 },
+  nameLine:  { x: 336, y: 393, w: 356, h: 38 },
+  special:   { x: 336, y: 419, w: 356, h: 38 },
+  barcode:   { x: 336, y: 441, w: 220, h: 38 },
+  counter:   { x: 562, y: 367, w: 221, h: 38 },
+  gradeName: { x: 562, y: 391, w: 221, h: 38 },
+  gradeNum:  { x: 562, y: 417, w: 221, h: 38 },
+  serial:    { x: 564, y: 441, w: 221, h: 38 },
+};
+function pfpFieldTop(f){ return f.y; }
+
+const PFP_LOCATIONS = ['EAST BLUE','WEST BLUE','NORTH BLUE','SOUTH BLUE','GRAND LINE','PARADISE','NEW WORLD','SKYPIEA','WANO','FISHMAN I.'];
+const PFP_GRADE_NAMES = {10:'GEM MT',9:'MINT',8:'NM-MT',7:'NM',6:'EX-MT',5:'EX',4:'VG-EX',3:'VG',2:'GOOD',1:'PR'};
+const PFP_GRADE_WEIGHTS = [[1,2],[2,2],[3,3],[4,4],[5,5],[6,6],[7,10],[8,15],[9,20],[10,25]];
+
+let pfpImgCache = {};
+let pfpInitialized = false;
+let pfpPhotoImg = null;
+let pfpBarcodeLibLoaded = false;
+
+function pfpLoadImg(url){
+  if(pfpImgCache[url]) return pfpImgCache[url];
+  const p = new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+  pfpImgCache[url] = p;
+  return p;
+}
+
+async function pfpEnsureFonts(){
+  try{
+    await Promise.all([
+      document.fonts.load('400 16px Airstrike'),
+      document.fonts.load('700 16px Airstrike'),
+      document.fonts.load('400 16px "Space Grotesk"'),
+      document.fonts.load('700 16px "Space Grotesk"'),
+    ]);
+    await document.fonts.ready;
+  }catch(e){}
+}
+
+function pfpLoadBarcodeLib(){
+  if(pfpBarcodeLibLoaded || window.JsBarcode) { pfpBarcodeLibLoaded = true; return Promise.resolve(); }
+  return new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js';
+    s.onload = ()=>{ pfpBarcodeLibLoaded = true; resolve(); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function pfpDrawCover(ctx, img, x, y, w, h){
+  const scale = Math.max(w / img.width, h / img.height);
+  const sw = w / scale, sh = h / scale;
+  const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function pfpFitText(ctx, text, maxWidth, startPx, minPx, fontTemplate){
+  let size = startPx;
+  ctx.font = fontTemplate(size);
+  while(size > minPx && ctx.measureText(text).width > maxWidth){
+    size -= 1;
+    ctx.font = fontTemplate(size);
+  }
+  return size;
+}
+
+function pfpRandomGrade(){
+  const total = PFP_GRADE_WEIGHTS.reduce((s,pair)=>s+pair[1],0);
+  let r = Math.random() * total;
+  for(const [grade,w] of PFP_GRADE_WEIGHTS){
+    if(r < w) return grade;
+    r -= w;
+  }
+  return 10;
+}
+
+function pfpRandomSerial(){
+  let s = '';
+  for(let i=0;i<10;i++) s += Math.floor(Math.random()*10);
+  return s;
+}
+
+function onPfpPhotoChange(evt){
+  const file = evt.target.files && evt.target.files[0];
+  const preview = document.getElementById('pfp-photo-preview');
+  if(!file){ pfpPhotoImg = null; preview.innerHTML = 'No photo yet'; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      pfpPhotoImg = img;
+      preview.innerHTML = '';
+      const previewImg = document.createElement('img');
+      previewImg.src = reader.result;
+      preview.appendChild(previewImg);
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function initPfpView(){
+  if(pfpInitialized) return;
+  pfpInitialized = true;
+  try{
+    const canvas = document.getElementById('pfp-canvas');
+    const ctx = canvas.getContext('2d');
+    const [bg, slab, frame] = await Promise.all([pfpLoadImg(PFP_BG_URL), pfpLoadImg(PFP_SLAB_URL), pfpLoadImg(PFP_FRAME_URL)]);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(bg,0,0,canvas.width,canvas.height);
+    ctx.drawImage(slab, PFP_SLAB_POS.x, PFP_SLAB_POS.y, PFP_SLAB_POS.w, PFP_SLAB_POS.h);
+    ctx.drawImage(frame, PFP_FRAME_POS.x, PFP_FRAME_POS.y, PFP_FRAME_POS.w, PFP_FRAME_POS.h);
+  }catch(e){ console.error('PFP preview failed to load', e); }
+}
+
+function pfpSetStatus(msg, cls){
+  const el = document.getElementById('pfp-status');
+  el.textContent = msg;
+  el.className = 'pfp-status' + (cls ? ' '+cls : '');
+}
+
+async function pfpNextCounter(){
+  try{
+    const res = await fetch('/api/pfp-counter', { method:'POST' });
+    const data = await res.json();
+    if(res.ok && typeof data.value === 'number') return data.value;
+  }catch(e){}
+  // Fallback so the tool still works even before the counter API/table is set up
+  return Math.floor(Math.random()*900)+100;
+}
+
+async function generatePfp(){
+  const handleInput = document.getElementById('pfp-handle-input');
+  const yearInput = document.getElementById('pfp-year-input');
+  const btn = document.getElementById('pfp-generate-btn');
+  const dlBtn = document.getElementById('pfp-download-btn');
+
+  const handle = (handleInput.value || '').trim().replace(/^@/,'');
+  const year = (yearInput.value || '').trim();
+
+  if(!pfpPhotoImg){ pfpSetStatus('Upload a photo first.', 'error'); return; }
+  if(!handle){ pfpSetStatus('Enter your @handle.', 'error'); handleInput.focus(); return; }
+  if(!year){ pfpSetStatus('Enter the year you joined X.', 'error'); yearInput.focus(); return; }
+
+  btn.disabled = true;
+  dlBtn.style.display = 'none';
+  pfpSetStatus('Generating…', '');
+
+  try{
+    await pfpEnsureFonts();
+    try{ await pfpLoadBarcodeLib(); }catch(e){ console.warn('Barcode library failed to load, skipping barcode.', e); }
+
+    const canvas = document.getElementById('pfp-canvas');
+    const ctx = canvas.getContext('2d');
+    const [bg, slab, frame] = await Promise.all([pfpLoadImg(PFP_BG_URL), pfpLoadImg(PFP_SLAB_URL), pfpLoadImg(PFP_FRAME_URL)]);
+
+    const counter = await pfpNextCounter();
+    const grade = pfpRandomGrade();
+    const gradeName = PFP_GRADE_NAMES[grade];
+    const serial = pfpRandomSerial();
+    const location = PFP_LOCATIONS[Math.floor(Math.random()*PFP_LOCATIONS.length)];
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // 1. background
+    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+    // 2. user's photo — drawn before the slab so its transparent cutout reveals it
+    pfpDrawCover(ctx, pfpPhotoImg, PFP_PHOTO_SLOT.x, PFP_PHOTO_SLOT.y, PFP_PHOTO_SLOT.w, PFP_PHOTO_SLOT.h);
+    // 3. PSA slab + blank label backing
+    ctx.drawImage(slab, PFP_SLAB_POS.x, PFP_SLAB_POS.y, PFP_SLAB_POS.w, PFP_SLAB_POS.h);
+    // 4. dynamic label text
+    pfpDrawLabel(ctx, { year, handle, location, counter, grade, gradeName, serial });
+    // 5. barcode
+    pfpDrawBarcode(ctx, serial);
+    // 6. glossy plastic case overlay, drawn last
+    ctx.drawImage(frame, PFP_FRAME_POS.x, PFP_FRAME_POS.y, PFP_FRAME_POS.w, PFP_FRAME_POS.h);
+
+    dlBtn.style.display = 'inline-block';
+    pfpSetStatus('Done! Download it below.', 'success');
+  }catch(e){
+    console.error('PFP generation failed', e);
+    pfpSetStatus('Something went wrong generating the image. Try again.', 'error');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function pfpDrawLabel(ctx, d){
+  const f = PFP_LABEL_FIELDS;
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = PFP_LABEL_COLOR;
+
+  // Left column: year/handle/location, GACHA, SPECIAL — all uniform size/weight/color
+  ctx.textAlign = 'left';
+  const topLine = `${d.year} · @${d.handle} · ${d.location}`;
+  pfpFitText(ctx, topLine, f.topLine.w, PFP_LABEL_FONT_SIZE, 13, s=>`700 ${s}px 'Space Grotesk'`);
+  ctx.fillText(topLine, f.topLine.x, pfpFieldTop(f.topLine));
+
+  ctx.font = PFP_LABEL_FONT;
+  ctx.fillText('GACHA', f.nameLine.x, pfpFieldTop(f.nameLine));
+  ctx.fillText('SPECIAL', f.special.x, pfpFieldTop(f.special));
+
+  // Right column: cert #, grade name, grade number, serial — same uniform styling
+  ctx.textAlign = 'right';
+  ctx.font = PFP_LABEL_FONT;
+  ctx.fillText('#' + String(d.counter).padStart(3,'0'), f.counter.x + f.counter.w, pfpFieldTop(f.counter));
+  ctx.fillText(d.gradeName, f.gradeName.x + f.gradeName.w, pfpFieldTop(f.gradeName));
+  ctx.fillText(String(d.grade), f.gradeNum.x + f.gradeNum.w, pfpFieldTop(f.gradeNum));
+  ctx.fillText(d.serial, f.serial.x + f.serial.w, pfpFieldTop(f.serial));
+}
+
+function pfpDrawBarcode(ctx, serial){
+  if(!window.JsBarcode) return;
+  try{
+    const off = document.createElement('canvas');
+    window.JsBarcode(off, serial, {
+      format: 'CODE128', width: 1.5, height: 26, displayValue: false, margin: 0, background: 'transparent', lineColor: '#000000'
+    });
+    const b = PFP_LABEL_FIELDS.barcode;
+    const bw = Math.min(b.w, 190), bh = 26;
+    ctx.drawImage(off, b.x, b.y + (b.h - bh) / 2, bw, bh);
+  }catch(e){ console.error('Barcode render failed', e); }
+}
+
+function downloadPfp(){
+  const canvas = document.getElementById('pfp-canvas');
+  const link = document.createElement('a');
+  link.download = 'just-pulled-wanted-poster.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
 </script>
 </body>
 </html>
