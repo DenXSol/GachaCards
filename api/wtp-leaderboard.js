@@ -12,14 +12,26 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // TOP 10 — highest score first, fastest time breaks ties within the same score
+    // TOP 25 — highest score first, fastest time breaks ties within the same score.
+    // Optional ?gen=0-9 and ?mode=easy|hard query params filter the results.
     if (req.method === 'GET') {
-      const { data, error } = await supabase
+      let query = supabase
         .from('wtp_leaderboard')
         .select('id, user_id, display_name, mode, gen, score, total, time_ms, created_at')
         .order('score', { ascending: false })
         .order('time_ms', { ascending: true })
-        .limit(10);
+        .limit(25);
+
+      const { gen, mode } = req.query || {};
+      if (gen !== undefined && gen !== '') {
+        const genNum = parseInt(gen, 10);
+        if (!Number.isNaN(genNum)) query = query.eq('gen', genNum);
+      }
+      if (mode === 'easy' || mode === 'hard') {
+        query = query.eq('mode', mode);
+      }
+
+      const { data, error } = await query;
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json({ leaderboard: data });
     }

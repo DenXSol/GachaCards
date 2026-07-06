@@ -573,6 +573,15 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 }
 .wtp-lb-title span { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: #888; font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em; }
 .wtp-lb-empty { font-size: 13px; color: #888; padding: 16px 0; text-align: center; }
+.wtp-lb-filters { display: flex; gap: 8px; margin-bottom: 12px; }
+.wtp-lb-filters select {
+  flex: 1; min-width: 0; background: #141414; border: 1px solid #2a2a2a; color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  padding: 7px 6px; border-radius: 6px; cursor: pointer; text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.wtp-lb-filters select:focus { outline: none; border-color: rgba(211,240,21,0.35); }
+#wtp-lb-list { max-height: 530px; overflow-y: auto; }
 .wtp-lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a1a1f; font-size: 12px; }
 .wtp-lb-row:last-child { border-bottom: none; }
 .wtp-lb-rank { font-family: 'Airstrike', sans-serif; font-size: 15px; color: #666; width: 20px; flex-shrink: 0; }
@@ -1058,7 +1067,27 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 </div>
 <!-- WTP LEADERBOARD -->
 <div class="wtp-leaderboard-panel">
-  <div class="wtp-lb-title">🏆 Top 10<span>Fastest completions</span></div>
+  <div class="wtp-lb-title">🏆 Top 25<span>Best score · fastest time breaks ties</span></div>
+  <div class="wtp-lb-filters">
+    <select id="wtp-lb-gen-filter" onchange="loadWtpLeaderboard()">
+      <option value="">All Gens</option>
+      <option value="1">Gen 1 · Kanto</option>
+      <option value="2">Gen 2 · Johto</option>
+      <option value="3">Gen 3 · Hoenn</option>
+      <option value="4">Gen 4 · Sinnoh</option>
+      <option value="5">Gen 5 · Unova</option>
+      <option value="6">Gen 6 · Kalos</option>
+      <option value="7">Gen 7 · Alola</option>
+      <option value="8">Gen 8 · Galar</option>
+      <option value="9">Gen 9 · Paldea</option>
+      <option value="0">All Pokémon (1025)</option>
+    </select>
+    <select id="wtp-lb-mode-filter" onchange="loadWtpLeaderboard()">
+      <option value="">Easy &amp; Hard</option>
+      <option value="easy">Easy</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
   <div id="wtp-lb-list"><div class="wtp-lb-empty">Loading…</div></div>
 </div>
 </div>
@@ -2872,8 +2901,13 @@ async function submitWtpScore(elapsedMs, displayName) {
 
 async function loadWtpLeaderboard() {
   const list = document.getElementById('wtp-lb-list');
+  const genSel = document.getElementById('wtp-lb-gen-filter');
+  const modeSel = document.getElementById('wtp-lb-mode-filter');
+  const params = new URLSearchParams();
+  if (genSel && genSel.value !== '') params.set('gen', genSel.value);
+  if (modeSel && modeSel.value !== '') params.set('mode', modeSel.value);
   try {
-    const res = await fetch('/api/wtp-leaderboard');
+    const res = await fetch('/api/wtp-leaderboard' + (params.toString() ? '?' + params.toString() : ''));
     const data = await res.json();
     renderWtpLeaderboard(data.leaderboard || []);
   } catch (e) {
