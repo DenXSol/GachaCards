@@ -1,12 +1,13 @@
 {
   "outputDirectory": "public",
-  "cleanUrls": true,
   "redirects": [
     { "source": "/whos-that-pokemon.html", "destination": "/", "permanent": true },
     { "source": "/whos-that-pokemon", "destination": "/", "permanent": true }
   ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/PFP", "destination": "/index.html" },
+    { "source": "/pfp", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
