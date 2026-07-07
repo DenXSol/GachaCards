@@ -1618,14 +1618,17 @@ async function renderProfile(){
       <div class="vote-slots">${slots}</div>
       <div style="font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:1rem;">MY <span style="color:var(--accent)">WANTED</span> CARDS</div>
       ${votes?.length?`<div class="profile-cards-grid">${votes.map(v=>`
-        <div class="profile-card" onclick="fetchAndOpenCard('${v.card_id}')">
-          ${v.card_image?`<img src="${v.card_image}" alt="${v.card_name}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:100px">No image</div>`}
+        <div class="profile-card" data-card-id="${escAttr(v.card_id)}">
+          ${v.card_image?`<img src="${escAttr(v.card_image)}" alt="${escAttr(v.card_name)}" loading="lazy"/>`:`<div class="no-img-placeholder" style="height:100px">No image</div>`}
           <div class="profile-card-info">
-            <div class="profile-card-name">${v.card_name}</div>
-            <div class="profile-card-set">${v.set_name||''}</div>
+            <div class="profile-card-name">${escHtml(v.card_name)}</div>
+            <div class="profile-card-set">${escHtml(v.set_name||'')}</div>
           </div>
         </div>`).join('')}</div>
       `:`<div class="status-msg">No votes yet — search for cards and vote!</div>`}`;
+    content.querySelectorAll('.profile-card[data-card-id]').forEach(el=>{
+      el.addEventListener('click',()=>fetchAndOpenCard(el.dataset.cardId));
+    });
   }catch(e){content.innerHTML='<div class="status-msg">Error loading profile.</div>';}
 }
 
@@ -1720,7 +1723,7 @@ function openAvatarPicker(){
       if(!v.card_image)return;
       const el=document.createElement('div');
       el.className='avatar-card-option';
-      el.innerHTML=`<img src="${v.card_image}" alt="${v.card_name}"/><p>${v.card_name}</p>`;
+      el.innerHTML=`<img src="${escAttr(v.card_image)}" alt="${escAttr(v.card_name)}"/><p>${escHtml(v.card_name)}</p>`;
       el.addEventListener('click',()=>setAvatar(v.card_image));
       grid.appendChild(el);
     });
@@ -2440,15 +2443,18 @@ async function viewUserProfile(username) {
       ${votes?.length ? `
         <div class="profile-cards-grid">
           ${votes.map(v => `
-            <div class="profile-card" onclick="fetchAndOpenCard('${v.card_id}')">
-              ${v.card_image ? `<img src="${v.card_image}" alt="${v.card_name}" loading="lazy"/>` : `<div class="no-img-placeholder" style="height:100px">No image</div>`}
+            <div class="profile-card" data-card-id="${escAttr(v.card_id)}">
+              ${v.card_image ? `<img src="${escAttr(v.card_image)}" alt="${escAttr(v.card_name)}" loading="lazy"/>` : `<div class="no-img-placeholder" style="height:100px">No image</div>`}
               <div class="profile-card-info">
-                <div class="profile-card-name">${v.card_name}</div>
-                <div class="profile-card-set">${v.set_name || ''}</div>
+                <div class="profile-card-name">${escHtml(v.card_name)}</div>
+                <div class="profile-card-set">${escHtml(v.set_name || '')}</div>
               </div>
             </div>`).join('')}
-        </div>` 
+        </div>`
       : `<div class="status-msg">No voted cards yet.</div>`}`;
+    content.querySelectorAll('.profile-card[data-card-id]').forEach(el=>{
+      el.addEventListener('click',()=>fetchAndOpenCard(el.dataset.cardId));
+    });
 
   } catch(e) {
     content.innerHTML = '<div class="status-msg">Error loading profile.</div>';

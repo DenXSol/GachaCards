@@ -20,10 +20,14 @@ module.exports = async function handler(req, res) {
       const { data: { user }, error: userError } = await supabase.auth.getUser(token);
       if (userError || !user) return res.status(401).json({ error: 'Invalid session.' });
 
-      const { action, avatar_card_image } = req.body;
+      let { action, avatar_card_image } = req.body;
       if (action === 'set_avatar') {
+        avatar_card_image = (avatar_card_image || '').toString().trim().slice(0, 500);
+        if (avatar_card_image && (!/^https:\/\//i.test(avatar_card_image) || /[<>"'`]/.test(avatar_card_image))) {
+          return res.status(400).json({ error: 'Invalid avatar image.' });
+        }
         const { error } = await supabase.from('profiles')
-          .update({ avatar_card_image }).eq('id', user.id);
+          .update({ avatar_card_image: avatar_card_image || null }).eq('id', user.id);
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json({ message: 'Avatar updated!' });
       }

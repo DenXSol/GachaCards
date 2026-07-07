@@ -48,7 +48,28 @@ module.exports = async function handler(req, res) {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     if (userError || !user) return res.status(401).json({ error: 'Invalid session.' });
 
-    const { action, card_id, card_name, set_name, card_image } = req.body;
+    let { action, card_id, card_name, set_name, card_image } = req.body;
+
+    // card_id/card_name/set_name/card_image are client-supplied and get rendered
+    // back out on profile pages (own + public) — sanitize the same way as the
+    // other user-facing text fields so this can't become another injection path.
+    const badChars = /[<>"'`]/;
+    if (action === 'vote') {
+      card_id = (card_id || '').toString().trim().slice(0, 64);
+      card_name = (card_name || '').toString().trim().slice(0, 120);
+      set_name = (set_name || '').toString().trim().slice(0, 120);
+      card_image = (card_image || '').toString().trim().slice(0, 500);
+      if (!card_id || !card_name) {
+        return res.status(400).json({ error: 'Missing card info.' });
+      }
+      if (badChars.test(card_id) || badChars.test(card_name) || badChars.test(set_name) || badChars.test(card_image)) {
+        return res.status(400).json({ error: 'Invalid card data.' });
+      }
+      // card_image should only ever be an https URL if present.
+      if (card_image && !/^https:\/\//i.test(card_image)) {
+        return res.status(400).json({ error: 'Invalid card image URL.' });
+      }
+    }
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase

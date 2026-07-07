@@ -20,11 +20,21 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { action, email, password, username, discord_id, twitter_handle, wallet_address } = req.body;
+    let { action, email, password, username, discord_id, twitter_handle, wallet_address } = req.body;
 
     if (action === 'register') {
       if (typeof username !== 'string' || !/^[A-Za-z0-9_]{3,20}$/.test(username)) {
         return res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, and underscores only.' });
+      }
+      // Same sanitization as api/profile.js's update_profile — these fields are
+      // rendered on public profile pages, so keep HTML/attribute-breaking
+      // characters out at every entry point, not just the edit-profile form.
+      const badChars = /[<>"'`]/;
+      discord_id = (discord_id || '').toString().trim().slice(0, 40);
+      twitter_handle = (twitter_handle || '').toString().trim().slice(0, 30);
+      wallet_address = (wallet_address || '').toString().trim().slice(0, 64);
+      if (badChars.test(discord_id) || badChars.test(twitter_handle) || badChars.test(wallet_address)) {
+        return res.status(400).json({ error: 'Profile fields cannot contain <, >, quotes, or backticks.' });
       }
 
       const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
