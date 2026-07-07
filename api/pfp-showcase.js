@@ -19,7 +19,7 @@ function hashIP(ip) {
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -33,6 +33,25 @@ module.exports = async function handler(req, res) {
         .limit(60);
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json({ posts: data });
+    }
+
+    // DELETE — admin-only removal of a post from the wall.
+    if (req.method === 'DELETE') {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) return res.status(401).json({ error: 'Not logged in.' });
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) return res.status(401).json({ error: 'Invalid session.' });
+
+      const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+      if (!profile?.is_admin) return res.status(403).json({ error: 'Not authorized.' });
+
+      const { id } = req.body || {};
+      if (!id) return res.status(400).json({ error: 'Missing id.' });
+
+      const { error } = await supabase.from('pfp_showcase').delete().eq('id', id);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ message: 'Post removed.' });
     }
 
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

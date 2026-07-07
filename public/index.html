@@ -634,7 +634,9 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-showcase-instructions ol{margin:0 0 18px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6;}
 .pfp-showcase-wall{margin-top:18px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:2px;}
 .pfp-showcase-empty{font-size:12px;color:var(--muted2);text-align:center;padding:20px 0;}
-.pfp-showcase-tweet{border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;overflow:hidden;}
+.pfp-showcase-tweet{position:relative;border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;overflow:hidden;}
+.pfp-showcase-delete-btn{position:absolute;top:6px;right:6px;z-index:5;background:#ef5350;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;opacity:0.92;}
+.pfp-showcase-delete-btn:hover{opacity:1;}
 .pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
 @media (max-width: 900px) {
   .pfp-layout { flex-direction: column; align-items: center; }
@@ -3484,12 +3486,37 @@ async function renderPfpShowcase(posts){
     const cell = document.createElement('div');
     cell.className = 'pfp-showcase-tweet';
     wall.appendChild(cell);
+    if(currentUser && currentUser.is_admin){
+      const delBtn = document.createElement('button');
+      delBtn.className = 'pfp-showcase-delete-btn';
+      delBtn.textContent = '✕ Remove';
+      delBtn.addEventListener('click', ()=>deletePfpShowcasePost(p.id, cell));
+      cell.appendChild(delBtn);
+    }
     if(window.twttr && window.twttr.widgets){
       window.twttr.widgets.createTweet(p.tweet_id, cell, { theme: 'dark', dnt: true, conversation: 'none' })
         .then(el=>{ if(!el) cell.remove(); }) // tweet was deleted/protected — drop the empty slot
         .catch(()=>{ cell.remove(); });
     }
   });
+}
+
+async function deletePfpShowcasePost(id, cellEl){
+  if(!currentUser || !currentSession) return;
+  if(!confirm('Remove this post from the wall?')) return;
+  try{
+    const res = await fetch('/api/pfp-showcase', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentSession },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if(!res.ok){ showToast(data.error || 'Could not remove post.'); return; }
+    if(cellEl) cellEl.remove();
+    showToast('Post removed.');
+  }catch(e){
+    showToast('Something went wrong removing that post.');
+  }
 }
 
 async function submitPfpShowcase(){
