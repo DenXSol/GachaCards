@@ -1106,6 +1106,21 @@ let globalVoteCounts = {};
 let currentModalCard = null;
 let votesRemaining = 10;
 
+// ── HTML ESCAPING (shared) ───────────────────────────────────────────
+// escHtml: safe for text-node / innerHTML content (escapes & < >).
+// escAttr: safe for use INSIDE a quoted HTML attribute value (also escapes " ').
+// Any user-controlled string (username, display_name, twitter/discord handles,
+// etc.) must go through one of these before being placed in an innerHTML
+// template — never interpolate untrusted text directly.
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
+}
+function escAttr(str) {
+  return escHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 // ── TOAST ─────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg){
@@ -1583,17 +1598,17 @@ async function renderProfile(){
         <div class="profile-avatar-wrap" onclick="openAvatarPicker()">
           <div class="profile-avatar" id="profile-avatar-el">
             ${profile.avatar_card_image
-              ? `<img src="${profile.avatar_card_image}" alt="avatar"/>`
-              : `<span>${profile.username[0].toUpperCase()}</span>`}
+              ? `<img src="${escAttr(profile.avatar_card_image)}" alt="avatar"/>`
+              : `<span>${escHtml(profile.username[0].toUpperCase())}</span>`}
           </div>
           <div class="avatar-edit-hint">Edit</div>
         </div>
         <div>
-          <div class="profile-username">${profile.username}</div>
+          <div class="profile-username">${escHtml(profile.username)}</div>
           <div class="profile-meta">
-            ${profile.twitter_handle?`<a href="https://twitter.com/${profile.twitter_handle.replace('@','')}" target="_blank">${profile.twitter_handle}</a>`:''}
-            ${profile.discord_id?`<span>Discord: ${profile.discord_id}</span>`:''}
-            ${profile.wallet_address?`<span>${profile.wallet_address.slice(0,6)}...${profile.wallet_address.slice(-4)}</span>`:''}
+            ${profile.twitter_handle?`<a href="https://twitter.com/${escAttr(profile.twitter_handle.replace('@',''))}" target="_blank">${escHtml(profile.twitter_handle)}</a>`:''}
+            ${profile.discord_id?`<span>Discord: ${escHtml(profile.discord_id)}</span>`:''}
+            ${profile.wallet_address?`<span>${escHtml(profile.wallet_address.slice(0,6))}...${escHtml(profile.wallet_address.slice(-4))}</span>`:''}
             <span>Joined ${new Date(profile.created_at).toLocaleDateString()}</span>
           </div>
           <button class="edit-profile-btn" onclick="openEditProfile()">✎ Edit Profile</button>
@@ -1633,14 +1648,18 @@ async function loadVoters(cardId){
     if(!voters.length){list.innerHTML='<div class="voters-empty">No votes yet</div>';return;}
     list.innerHTML=voters.map(v=>{
       const u=v.profiles;
+      const uname=u?.username||'';
       const avatar=u?.avatar_card_image
-        ?`<img src="${u.avatar_card_image}" alt="${u.username}"/>`
-        :`<span>${(u?.username||'?')[0].toUpperCase()}</span>`;
+        ?`<img src="${escAttr(u.avatar_card_image)}" alt="${escAttr(uname)}"/>`
+        :`<span>${escHtml((uname||'?')[0].toUpperCase())}</span>`;
       return `<div class="voter-item">
         <div class="voter-avatar">${avatar}</div>
-        <div class="voter-name" onclick="viewUserProfile('${u?.username||''}')" style="cursor:pointer;" title="View ${u?.username}'s profile">${u?.username||'Unknown'}</div>
+        <div class="voter-name" data-username="${escAttr(uname)}" style="cursor:pointer;" title="View ${escAttr(uname)}'s profile">${escHtml(uname||'Unknown')}</div>
       </div>`;
     }).join('');
+    list.querySelectorAll('.voter-name').forEach(el=>{
+      el.addEventListener('click', ()=>viewUserProfile(el.dataset.username));
+    });
   }catch(e){list.innerHTML='<div class="voters-empty">Could not load</div>';}
 }
 
@@ -2395,8 +2414,8 @@ async function viewUserProfile(username) {
     const { profile, votes } = data;
 
     const avatar = profile.avatar_card_image
-      ? `<img src="${profile.avatar_card_image}" alt="${profile.username}"/>`
-      : `<span>${profile.username[0].toUpperCase()}</span>`;
+      ? `<img src="${escAttr(profile.avatar_card_image)}" alt="${escAttr(profile.username)}"/>`
+      : `<span>${escHtml(profile.username[0].toUpperCase())}</span>`;
 
     content.innerHTML = `
       <button class="set-back-btn" onclick="goBack()">← Back</button>
@@ -2405,17 +2424,17 @@ async function viewUserProfile(username) {
           <div class="profile-avatar">${avatar}</div>
         </div>
         <div>
-          <div class="profile-username">${profile.username}</div>
+          <div class="profile-username">${escHtml(profile.username)}</div>
           <div class="profile-meta">
-            ${profile.twitter_handle ? `<a href="https://twitter.com/${profile.twitter_handle.replace('@','')}" target="_blank">${profile.twitter_handle}</a>` : ''}
-            ${profile.discord_id ? `<span>Discord: ${profile.discord_id}</span>` : ''}
-            ${profile.wallet_address ? `<span>${profile.wallet_address.slice(0,6)}...${profile.wallet_address.slice(-4)}</span>` : ''}
+            ${profile.twitter_handle ? `<a href="https://twitter.com/${escAttr(profile.twitter_handle.replace('@',''))}" target="_blank">${escHtml(profile.twitter_handle)}</a>` : ''}
+            ${profile.discord_id ? `<span>Discord: ${escHtml(profile.discord_id)}</span>` : ''}
+            ${profile.wallet_address ? `<span>${escHtml(profile.wallet_address.slice(0,6))}...${escHtml(profile.wallet_address.slice(-4))}</span>` : ''}
             <span>Joined ${new Date(profile.created_at).toLocaleDateString()}</span>
           </div>
         </div>
       </div>
       <div style="font-family:var(--font-display);font-size:1.8rem;letter-spacing:0.06em;margin-bottom:1rem;">
-        ${profile.username.toUpperCase()}'S <span style="color:var(--accent)">WANTED</span> CARDS
+        ${escHtml(profile.username.toUpperCase())}'S <span style="color:var(--accent)">WANTED</span> CARDS
         <span style="font-size:1rem;color:var(--muted2);font-family:var(--font-body);font-weight:400;margin-left:8px;">${votes?.length || 0} cards</span>
       </div>
       ${votes?.length ? `
@@ -2940,16 +2959,16 @@ function renderWtpLeaderboard(entries) {
   if (!list) return;
   if (!entries.length) { list.innerHTML = '<div class="wtp-lb-empty">No scores yet — be the first!</div>'; return; }
   list.innerHTML = entries.map((e, i) => {
-    const safeName = wtpEscapeHtml(e.display_name);
+    const safeName = escHtml(e.display_name);
     const nameHtml = e.user_id
-      ? `<span class="wtp-lb-name" onclick="viewUserProfile('${safeName.replace(/'/g, "\\'")}')">${safeName}</span>`
+      ? `<span class="wtp-lb-name" data-username="${escAttr(e.display_name)}">${safeName}</span>`
       : `<span class="wtp-lb-name anon">${safeName}</span>`;
     return `
       <div class="wtp-lb-row">
         <div class="wtp-lb-rank">#${i + 1}</div>
         <div class="wtp-lb-info">
           ${nameHtml}
-          <div class="wtp-lb-meta">${e.mode === 'easy' ? 'Easy' : 'Hard'} · ${wtpEscapeHtml(wtpGenLabel(e.gen))}</div>
+          <div class="wtp-lb-meta">${e.mode === 'easy' ? 'Easy' : 'Hard'} · ${escHtml(wtpGenLabel(e.gen))}</div>
         </div>
         <div class="wtp-lb-stats">
           <div class="wtp-lb-time">${formatWtpTime(e.time_ms)}</div>
@@ -2958,6 +2977,9 @@ function renderWtpLeaderboard(entries) {
       </div>
     `;
   }).join('');
+  list.querySelectorAll('.wtp-lb-name:not(.anon)').forEach(el=>{
+    el.addEventListener('click', ()=>viewUserProfile(el.dataset.username));
+  });
 }
 
 loadWtpLeaderboard();

@@ -29,9 +29,21 @@ module.exports = async function handler(req, res) {
       }
 
       if (action === 'update_profile') {
-        const { twitter_handle, discord_id, wallet_address } = req.body;
+        let { twitter_handle, discord_id, wallet_address } = req.body;
+        // These are rendered on public profile pages, so they're already HTML-escaped
+        // at render time — but reject anything that looks like HTML/attribute syntax
+        // at the door too (defense in depth), and cap lengths so a field can't be
+        // used to stuff arbitrary junk into the profile.
+        const badChars = /[<>"'`]/;
+        twitter_handle = (twitter_handle || '').toString().trim().slice(0, 30);
+        discord_id = (discord_id || '').toString().trim().slice(0, 40);
+        wallet_address = (wallet_address || '').toString().trim().slice(0, 64);
+        if (badChars.test(twitter_handle) || badChars.test(discord_id) || badChars.test(wallet_address)) {
+          return res.status(400).json({ error: 'Profile fields cannot contain <, >, quotes, or backticks.' });
+        }
         const { error } = await supabase.from('profiles')
-          .update({ twitter_handle, discord_id, wallet_address }).eq('id', user.id);
+          .update({ twitter_handle: twitter_handle || null, discord_id: discord_id || null, wallet_address: wallet_address || null })
+          .eq('id', user.id);
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json({ message: 'Profile updated!' });
       }

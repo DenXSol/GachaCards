@@ -23,6 +23,10 @@ module.exports = async function handler(req, res) {
     const { action, email, password, username, discord_id, twitter_handle, wallet_address } = req.body;
 
     if (action === 'register') {
+      if (typeof username !== 'string' || !/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+        return res.status(400).json({ error: 'Username must be 3-20 characters: letters, numbers, and underscores only.' });
+      }
+
       const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
       const ip_hash = hashIP(ip);
 

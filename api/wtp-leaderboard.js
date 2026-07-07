@@ -42,7 +42,9 @@ module.exports = async function handler(req, res) {
 
     if (mode !== 'easy' && mode !== 'hard') return res.status(400).json({ error: 'Invalid mode.' });
     if (typeof gen !== 'number' || gen < 0 || gen > 9) return res.status(400).json({ error: 'Invalid generation.' });
-    if (typeof score !== 'number' || typeof total !== 'number' || score < 0 || score > total) {
+    // A round is always exactly 10 questions (queue.slice(0,10)) — anything
+    // outside that range can't come from the real game.
+    if (typeof score !== 'number' || typeof total !== 'number' || score < 0 || score > total || total < 1 || total > 10) {
       return res.status(400).json({ error: 'Invalid score.' });
     }
     if (typeof time_ms !== 'number' || time_ms <= 0 || time_ms > 1000 * 60 * 60) {
@@ -64,6 +66,12 @@ module.exports = async function handler(req, res) {
     }
 
     if (!name) return res.status(400).json({ error: 'A name is required.' });
+    // Anonymous names are free text from the client — restrict the charset so
+    // nothing that looks like HTML/attribute syntax can ever be stored, even
+    // though the frontend also escapes on render (defense in depth).
+    if (!user_id && !/^[A-Za-z0-9 _.\-]{1,24}$/.test(name)) {
+      return res.status(400).json({ error: 'Name can only contain letters, numbers, spaces, underscores, hyphens, and periods.' });
+    }
 
     // Only keeps this run if it beats the player's existing best for this
     // mode+gen (higher score, or same score with a faster time). Otherwise
