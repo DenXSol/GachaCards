@@ -629,9 +629,17 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-preview-wrap canvas{width:340px;height:auto;border-radius:12px;background:#111;border:1px solid var(--border);}
 .pfp-download-btn{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 26px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
 .pfp-download-btn:hover{opacity:0.85;}
+.pfp-showcase-panel{flex:0 0 340px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;box-sizing:border-box;}
+.pfp-showcase-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+.pfp-showcase-instructions ol{margin:0 0 18px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6;}
+.pfp-showcase-wall{margin-top:18px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-right:2px;}
+.pfp-showcase-empty{font-size:12px;color:var(--muted2);text-align:center;padding:20px 0;}
+.pfp-showcase-tweet{border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;overflow:hidden;}
+.pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
 @media (max-width: 900px) {
   .pfp-layout { flex-direction: column; align-items: center; }
   .pfp-controls { width: 100%; max-width: 420px; }
+  .pfp-showcase-panel { width: 100%; max-width: 420px; }
   .pfp-preview-wrap canvas { width: 280px; }
 }
 </style>
@@ -639,7 +647,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 <body>
 
 <header>
-  <div class="logo"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:36px;width:auto;display:block;"/></div>
+  <div class="logo"><img src="/assets/logo.png" alt="GachaCards" style="height:36px;width:auto;display:block;"/></div>
   <nav>
     <button id="nav-leaderboard" class="active" onclick="showView('leaderboard',this)">Most Wanted</button>
     <button id="nav-search" onclick="showView('search',this)">Search Cards</button>
@@ -706,6 +714,30 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     <div class="pfp-preview-wrap">
       <canvas id="pfp-canvas" width="1122" height="1402"></canvas>
       <button class="pfp-download-btn" id="pfp-download-btn" style="display:none" onclick="downloadPfp()">⬇ Download PNG</button>
+    </div>
+    <div class="pfp-showcase-panel">
+      <div class="pfp-showcase-instructions">
+        <div class="pfp-showcase-title">Post & get featured</div>
+        <ol>
+          <li>Download your poster.</li>
+          <li>Post it on <strong>X</strong>.</li>
+          <li>Paste the link to your post below.</li>
+        </ol>
+      </div>
+      <div class="pfp-field" id="pfp-showcase-name-field" style="display:none">
+        <label>Your name</label>
+        <input type="text" id="pfp-showcase-name-input" placeholder="Your name" maxlength="24"/>
+      </div>
+      <div class="pfp-field">
+        <label>Link to your X post</label>
+        <input type="text" id="pfp-showcase-url-input" placeholder="https://x.com/yourname/status/..."/>
+      </div>
+      <button class="pfp-generate-btn" id="pfp-showcase-submit-btn" onclick="submitPfpShowcase()">Submit Post</button>
+      <div class="pfp-status" id="pfp-showcase-status"></div>
+      <div class="pfp-showcase-wall-title">Everyone's posts</div>
+      <div class="pfp-showcase-wall" id="pfp-showcase-wall">
+        <div class="pfp-showcase-empty">Loading…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -850,7 +882,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
       </div>
 
       <!-- VS -->
-      <div class="tot-vs"><img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/Layer%202%20(1).png" alt="vs" style="width:120px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(211,240,21,0.3));"/></div>
+      <div class="tot-vs"><img src="/assets/vs.png" alt="vs" style="width:120px;height:auto;display:block;filter:drop-shadow(0 0 12px rgba(211,240,21,0.3));"/></div>
 
       <!-- RIGHT CARD -->
       <div class="tot-card-wrap" id="tot-right-wrap">
@@ -919,7 +951,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 <div class="auth-overlay" id="auth-overlay" onclick="closeAuthModal(event)">
   <div class="auth-modal">
     <button class="auth-close" onclick="closeAuthModal()">✕</button>
-    <img src="https://raw.githubusercontent.com/DenXSol/GachaCards/main/logo%20bueno%20pro%2020.png" alt="GachaCards" style="height:40px;width:auto;display:block;margin-bottom:8px;"/>
+    <img src="/assets/logo.png" alt="GachaCards" style="height:40px;width:auto;display:block;margin-bottom:8px;"/>
     <p>Join to vote on the cards you want</p>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
@@ -1302,7 +1334,7 @@ function showView(name,btn,skipPush){
   if(name==='profile')renderProfile();
   if(name==='sets')renderSets();
   if(name==='thisorthat')initTOTView();
-  if(name==='pfp')initPfpView();
+  if(name==='pfp'){initPfpView();loadPfpShowcase();}
   if(!skipPush){
     const wantPath = VIEW_PATHS[name] || '/';
     if(window.location.pathname.toLowerCase()!==wantPath.toLowerCase()){
@@ -3155,7 +3187,7 @@ window.selectGen = function(g, el) {
 </script>
 <script>
 // ===== JUST PULLED PFP GENERATOR =====
-const PFP_ASSET_BASE = 'https://raw.githubusercontent.com/DenXSol/GachaCards/main/assets/';
+const PFP_ASSET_BASE = '/assets/';
 const PFP_BG_URL    = PFP_ASSET_BASE + 'backgrounds/PFPMaker.png';
 const PFP_SLAB_URL  = PFP_ASSET_BASE + 'bases/PFPslab.png';
 const PFP_FRAME_URL = PFP_ASSET_BASE + 'overlays/PSAframePFP.png';
@@ -3405,6 +3437,98 @@ function downloadPfp(){
   link.download = 'just-pulled-wanted-poster.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+
+// ===== JUST PULLED SHOWCASE (post-to-X wall) =====
+let pfpTwitterWidgetsLoaded = false;
+function pfpLoadTwitterWidgets(){
+  if(pfpTwitterWidgetsLoaded || window.twttr){ pfpTwitterWidgetsLoaded = true; return Promise.resolve(); }
+  return new Promise((resolve)=>{
+    const s = document.createElement('script');
+    s.src = 'https://platform.twitter.com/widgets.js';
+    s.async = true;
+    s.onload = ()=>{ pfpTwitterWidgetsLoaded = true; resolve(); };
+    s.onerror = ()=>resolve(); // don't block the rest of the wall if the widget script fails
+    document.head.appendChild(s);
+  });
+}
+
+function pfpShowcaseSyncAuthUI(){
+  const nameField = document.getElementById('pfp-showcase-name-field');
+  if(nameField) nameField.style.display = currentUser ? 'none' : 'block';
+}
+
+async function loadPfpShowcase(){
+  pfpShowcaseSyncAuthUI();
+  const wall = document.getElementById('pfp-showcase-wall');
+  if(!wall) return;
+  try{
+    const res = await fetch('/api/pfp-showcase');
+    const data = await res.json();
+    renderPfpShowcase(data.posts || []);
+  }catch(e){
+    wall.innerHTML = '<div class="pfp-showcase-empty">Couldn\'t load posts.</div>';
+  }
+}
+
+async function renderPfpShowcase(posts){
+  const wall = document.getElementById('pfp-showcase-wall');
+  if(!wall) return;
+  if(!posts.length){
+    wall.innerHTML = '<div class="pfp-showcase-empty">No posts yet — be the first!</div>';
+    return;
+  }
+  wall.innerHTML = '';
+  await pfpLoadTwitterWidgets();
+  posts.forEach(p=>{
+    const cell = document.createElement('div');
+    cell.className = 'pfp-showcase-tweet';
+    wall.appendChild(cell);
+    if(window.twttr && window.twttr.widgets){
+      window.twttr.widgets.createTweet(p.tweet_id, cell, { theme: 'dark', dnt: true, conversation: 'none' })
+        .then(el=>{ if(!el) cell.remove(); }) // tweet was deleted/protected — drop the empty slot
+        .catch(()=>{ cell.remove(); });
+    }
+  });
+}
+
+async function submitPfpShowcase(){
+  const urlInput = document.getElementById('pfp-showcase-url-input');
+  const nameInput = document.getElementById('pfp-showcase-name-input');
+  const btn = document.getElementById('pfp-showcase-submit-btn');
+  const statusEl = document.getElementById('pfp-showcase-status');
+  if(!urlInput || !btn || !statusEl) return;
+
+  const tweetUrl = (urlInput.value || '').trim();
+  const name = (nameInput?.value || '').trim();
+
+  statusEl.textContent = '';
+  statusEl.className = 'pfp-status';
+
+  if(!tweetUrl){ statusEl.textContent = 'Paste your X post link first.'; statusEl.className = 'pfp-status error'; return; }
+  if(!currentUser && !name){ statusEl.textContent = 'Enter your name.'; statusEl.className = 'pfp-status error'; nameInput.focus(); return; }
+
+  btn.disabled = true;
+  statusEl.textContent = 'Submitting…';
+  try{
+    const headers = { 'Content-Type': 'application/json' };
+    if(currentUser && currentSession) headers['Authorization'] = 'Bearer ' + currentSession;
+    const res = await fetch('/api/pfp-showcase', {
+      method: 'POST', headers,
+      body: JSON.stringify({ tweet_url: tweetUrl, display_name: name }),
+    });
+    const data = await res.json();
+    if(!res.ok){ statusEl.textContent = data.error || 'Could not submit.'; statusEl.className = 'pfp-status error'; return; }
+    statusEl.textContent = 'Added to the wall!';
+    statusEl.className = 'pfp-status success';
+    urlInput.value = '';
+    loadPfpShowcase();
+  }catch(e){
+    statusEl.textContent = 'Something went wrong. Try again.';
+    statusEl.className = 'pfp-status error';
+  }finally{
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
