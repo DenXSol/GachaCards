@@ -151,6 +151,10 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 
 /* LEADERBOARD */
 .lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.lb-load-more-wrap{display:flex;justify-content:center;margin-top:24px;}
+.lb-load-more-btn{background:var(--surface);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 28px;border-radius:8px;cursor:pointer;text-transform:uppercase;letter-spacing:0.06em;transition:border-color 0.15s;}
+.lb-load-more-btn:hover{border-color:var(--accent-border);}
+.lb-load-more-btn:disabled{opacity:0.6;cursor:not-allowed;}
 .lb-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
 .lb-card:hover{transform:translateY(-3px);border-color:var(--border2);}
 .lb-card.top1{border-color:var(--accent);box-shadow:0 0 20px rgba(211,240,21,0.1);}
@@ -629,7 +633,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-preview-wrap canvas{width:340px;height:auto;border-radius:12px;background:#111;border:1px solid var(--border);}
 .pfp-download-btn{background:var(--accent);border:none;color:#000;font-family:var(--font-body);font-size:13px;font-weight:700;padding:11px 26px;border-radius:8px;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;letter-spacing:0.06em;}
 .pfp-download-btn:hover{opacity:0.85;}
-.pfp-showcase-panel{flex:0 0 340px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;box-sizing:border-box;}
+.pfp-showcase-panel{flex:0 0 680px;width:680px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;box-sizing:border-box;}
 .pfp-showcase-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
 .pfp-showcase-instructions ol{margin:0 0 18px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6;}
 .pfp-showcase-wall{margin-top:18px;max-height:480px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:2px 10px 2px 2px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;}
@@ -638,7 +642,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-showcase-wall::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 .pfp-showcase-wall::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
 .pfp-showcase-empty{font-size:12px;color:var(--muted2);text-align:center;padding:20px 0;}
-.pfp-showcase-tweet{position:relative;border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;overflow:hidden;}
+.pfp-showcase-tweet{position:relative;border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;}
 .pfp-showcase-delete-btn{position:absolute;top:6px;right:6px;z-index:5;background:#ef5350;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;opacity:0.92;}
 .pfp-showcase-delete-btn:hover{opacity:1;}
 .pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
@@ -689,6 +693,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
     </div>
   </div>
   <div class="lb-grid" id="lb-grid"></div>
+  <div class="lb-load-more-wrap" id="lb-load-more-wrap"></div>
 </div>
 
 <!-- JUST PULLED PFP -->
@@ -1336,7 +1341,7 @@ function showView(name,btn,skipPush){
   document.getElementById('view-'+name).classList.add('active');
   if(!btn) btn = document.getElementById('nav-'+name);
   if(btn)btn.classList.add('active');
-  if(name==='leaderboard')renderLeaderboard();
+  if(name==='leaderboard'){lbVisibleCount=LB_BATCH_SIZE;renderLeaderboard();}
   if(name==='profile')renderProfile();
   if(name==='sets')renderSets();
   if(name==='thisorthat')initTOTView();
@@ -1355,6 +1360,13 @@ window.addEventListener('popstate',()=>{
 });
 
 // ── LEADERBOARD ───────────────────────────────────────────────────
+// The grid is responsive (auto-fill columns), so "rows" isn't a fixed count —
+// 15 is a reasonable approximation of ~3 rows at typical desktop widths.
+// Only fetching/rendering this many up front (instead of every voted card) is
+// what makes the initial page load faster; the rest loads on "Load more".
+const LB_BATCH_SIZE = 15;
+let lbVisibleCount = LB_BATCH_SIZE;
+
 async function renderLeaderboard(){
   const grid=document.getElementById('lb-grid');
 
@@ -1366,25 +1378,40 @@ async function renderLeaderboard(){
   }
 
   await loadLeaderboard();
-
-  // Fetch uncached cards in parallel with concurrency limit of 6
-  const topIds = Object.keys(globalVoteCounts);
-  const uncached = topIds.filter(id=>!cardCache[id]);
-  if (uncached.length > 0) {
-    const CONCURRENCY = 6;
-    for (let i = 0; i < uncached.length; i += CONCURRENCY) {
-      const chunk = uncached.slice(i, i + CONCURRENCY);
-      await Promise.allSettled(chunk.map(async id => {
-        try {
-          const r = await fetch(`/api/pokemon?path=cards/${id}`);
-          const d = await r.json();
-          if (d.data) cardCache[id] = d.data;
-        } catch(e) {}
-      }));
-    }
-  }
-
+  await fetchUncachedLbCards(lbVisibleCount);
   buildLeaderboardDOM(grid);
+}
+
+// Fetches card data only for the first `count` (by vote rank) uncached cards —
+// called with the currently-visible slice so we never fetch more than what's
+// on screen.
+async function fetchUncachedLbCards(count){
+  const topIds = Object.entries(globalVoteCounts)
+    .filter(([,info])=>info.count>0)
+    .sort((a,b)=>b[1].count-a[1].count)
+    .slice(0, count)
+    .map(([id])=>id);
+  const uncached = topIds.filter(id=>!cardCache[id]);
+  if (!uncached.length) return;
+  const CONCURRENCY = 6;
+  for (let i = 0; i < uncached.length; i += CONCURRENCY) {
+    const chunk = uncached.slice(i, i + CONCURRENCY);
+    await Promise.allSettled(chunk.map(async id => {
+      try {
+        const r = await fetch(`/api/pokemon?path=cards/${id}`);
+        const d = await r.json();
+        if (d.data) cardCache[id] = d.data;
+      } catch(e) {}
+    }));
+  }
+}
+
+async function loadMoreLeaderboard(){
+  const btn = document.getElementById('lb-load-more-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Loading…'; }
+  lbVisibleCount += LB_BATCH_SIZE;
+  await fetchUncachedLbCards(lbVisibleCount);
+  buildLeaderboardDOM(document.getElementById('lb-grid'));
 }
 
 function buildLeaderboardDOM(grid){
@@ -1400,9 +1427,12 @@ function buildLeaderboardDOM(grid){
   document.getElementById('stat-pokemon').textContent=uniquePokemon||'—';
 
   grid.innerHTML='';
+  const moreWrap = document.getElementById('lb-load-more-wrap');
+  if(moreWrap) moreWrap.innerHTML='';
   if(!allCards.length){grid.innerHTML='<div class="status-msg">No votes yet — search cards and be the first to vote!</div>';return;}
 
-  allCards.forEach(({id,count,card,info},i)=>{
+  const visibleCards = allCards.slice(0, lbVisibleCount);
+  visibleCards.forEach(({id,count,card,info},i)=>{
     const rankClass=i===0?'top1':i===1?'top2':i===2?'top3':'';
     const img=card?.images?.small||info.image||'';
     const name=card?.name||info.name||'Unknown';
@@ -1434,6 +1464,11 @@ function buildLeaderboardDOM(grid){
     });
     grid.appendChild(el);
   });
+
+  if(moreWrap && allCards.length > lbVisibleCount){
+    const remaining = allCards.length - lbVisibleCount;
+    moreWrap.innerHTML = `<button class="lb-load-more-btn" id="lb-load-more-btn" onclick="loadMoreLeaderboard()">Load more (${remaining} more)</button>`;
+  }
 }
 
 // ── CAST VOTE ─────────────────────────────────────────────────────
@@ -2588,15 +2623,6 @@ validateAndRefreshSession();
 loadGachaInventory();
 renderLeaderboard();
 searchCards();
-
-// Deep-link routing: opens the matching tab directly if the URL matches one
-// of the canonical VIEW_PATHS (e.g. /WTP, /TOT, /PFP, /SETS, /cards, /user).
-(function(){
-  const view = pathToView(window.location.pathname);
-  if(view && view !== 'leaderboard'){
-    showView(view, document.getElementById('nav-'+view), true);
-  }
-})();
 </script>
 <script>
 // ===== WHO'S THAT POKEMON (merged view) =====
@@ -3561,6 +3587,22 @@ async function submitPfpShowcase(){
     btn.disabled = false;
   }
 }
+
+// Deep-link routing: opens the matching tab directly if the URL matches one of
+// the canonical VIEW_PATHS (e.g. /WTP, /TOT, /PFP, /SETS, /cards, /user).
+// This must run down here, after every view's init function (initPfpView,
+// loadPfpShowcase, initTOTView, etc.) is defined — calling it any earlier
+// throws a ReferenceError on a direct/hard navigation to one of those URLs,
+// since those functions live in this script tag which hasn't run yet earlier
+// in the page. That silently breaks the whole view (e.g. /PFP's showcase wall
+// getting stuck on "Loading…" forever) on refresh or a shared link, even
+// though clicking the same tab from within the already-loaded app works fine.
+(function(){
+  const view = pathToView(window.location.pathname);
+  if(view && view !== 'leaderboard'){
+    showView(view, document.getElementById('nav-'+view), true);
+  }
+})();
 </script>
 </body>
 </html>
