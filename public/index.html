@@ -648,6 +648,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-showcase-wall::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
 .pfp-showcase-empty{font-size:12px;color:var(--muted2);text-align:center;padding:20px 0;}
 .pfp-showcase-tweet{position:relative;border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;}
+.pfp-showcase-tweet-frame{display:block;width:100%;height:550px;border:none;border-radius:8px;}
 .pfp-showcase-delete-btn{position:absolute;top:6px;right:6px;z-index:5;background:#ef5350;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;opacity:0.92;}
 .pfp-showcase-delete-btn:hover{opacity:1;}
 .pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
@@ -3496,19 +3497,6 @@ function downloadPfp(){
 }
 
 // ===== JUST PULLED SHOWCASE (post-to-X wall) =====
-let pfpTwitterWidgetsLoaded = false;
-function pfpLoadTwitterWidgets(){
-  if(pfpTwitterWidgetsLoaded || window.twttr){ pfpTwitterWidgetsLoaded = true; return Promise.resolve(); }
-  return new Promise((resolve)=>{
-    const s = document.createElement('script');
-    s.src = 'https://platform.twitter.com/widgets.js';
-    s.async = true;
-    s.onload = ()=>{ pfpTwitterWidgetsLoaded = true; resolve(); };
-    s.onerror = ()=>resolve(); // don't block the rest of the wall if the widget script fails
-    document.head.appendChild(s);
-  });
-}
-
 function pfpShowcaseSyncAuthUI(){
   const nameField = document.getElementById('pfp-showcase-name-field');
   if(nameField) nameField.style.display = currentUser ? 'none' : 'block';
@@ -3535,7 +3523,6 @@ async function renderPfpShowcase(posts){
     return;
   }
   wall.innerHTML = '';
-  await pfpLoadTwitterWidgets();
   posts.forEach(p=>{
     const cell = document.createElement('div');
     cell.className = 'pfp-showcase-tweet';
@@ -3547,34 +3534,24 @@ async function renderPfpShowcase(posts){
       delBtn.addEventListener('click', ()=>deletePfpShowcasePost(p.id, cell));
       cell.appendChild(delBtn);
     }
+
+    // Twitter/X's JS widget (twttr.widgets.createTweet) relies on the embedded
+    // iframe posting its height back to the page — that handshake reliably
+    // fails to complete in modern browsers (third-party cookie restrictions),
+    // leaving a broken, uncollapsed sliver no matter how long you wait.
+    // Loading the same embed URL as a plain iframe with a fixed height skips
+    // that broken step entirely — the content renders fine either way, this
+    // just stops depending on X's script to tell us how tall it is. Tweets
+    // taller than the fixed height get their own native scrollbar inside the
+    // iframe automatically.
     const tweetHolder = document.createElement('div');
     cell.appendChild(tweetHolder);
-
-    // X's embed widget sometimes never sends back the resize signal it needs
-    // to expand past a tiny sliver (increasingly common now that browsers
-    // restrict third-party cookies) — if it hasn't rendered within 4s, swap in
-    // a simple link card instead of leaving a broken-looking stub.
-    let settled = false;
-    if(window.twttr && window.twttr.widgets){
-      window.twttr.widgets.createTweet(p.tweet_id, tweetHolder, { theme: 'dark', dnt: true, conversation: 'none' })
-        .then(el=>{
-          if(settled) return;
-          settled = true;
-          if(!el) pfpShowcaseFallback(tweetHolder, p); // tweet was deleted/protected
-        })
-        .catch(()=>{
-          if(settled) return;
-          settled = true;
-          pfpShowcaseFallback(tweetHolder, p);
-        });
-      setTimeout(()=>{
-        if(settled) return;
-        settled = true;
-        if(tweetHolder.offsetHeight < 100) pfpShowcaseFallback(tweetHolder, p);
-      }, 4000);
-    } else {
-      pfpShowcaseFallback(tweetHolder, p);
-    }
+    const iframe = document.createElement('iframe');
+    iframe.className = 'pfp-showcase-tweet-frame';
+    iframe.src = 'https://platform.twitter.com/embed/Tweet.html?dnt=true&theme=dark&frame=false&hideCard=false&hideThread=false&lang=en&id=' + encodeURIComponent(p.tweet_id);
+    iframe.loading = 'lazy';
+    iframe.onerror = ()=>pfpShowcaseFallback(tweetHolder, p);
+    tweetHolder.appendChild(iframe);
   });
 }
 
