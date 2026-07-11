@@ -646,6 +646,10 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-showcase-delete-btn{position:absolute;top:6px;right:6px;z-index:5;background:#ef5350;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;opacity:0.92;}
 .pfp-showcase-delete-btn:hover{opacity:1;}
 .pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
+.pfp-showcase-fallback{padding:22px 16px;text-align:center;}
+.pfp-showcase-fallback-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.pfp-showcase-fallback-link{display:inline-block;background:var(--surface2);border:1px solid var(--border2);color:var(--accent);text-decoration:none;font-size:13px;font-weight:700;padding:9px 18px;border-radius:8px;}
+.pfp-showcase-fallback-link:hover{border-color:var(--accent-border);}
 @media (max-width: 900px) {
   .pfp-layout { flex-direction: column; align-items: center; }
   .pfp-controls { width: 100%; max-width: 420px; }
@@ -3523,12 +3527,43 @@ async function renderPfpShowcase(posts){
       delBtn.addEventListener('click', ()=>deletePfpShowcasePost(p.id, cell));
       cell.appendChild(delBtn);
     }
+    const tweetHolder = document.createElement('div');
+    cell.appendChild(tweetHolder);
+
+    // X's embed widget sometimes never sends back the resize signal it needs
+    // to expand past a tiny sliver (increasingly common now that browsers
+    // restrict third-party cookies) — if it hasn't rendered within 4s, swap in
+    // a simple link card instead of leaving a broken-looking stub.
+    let settled = false;
     if(window.twttr && window.twttr.widgets){
-      window.twttr.widgets.createTweet(p.tweet_id, cell, { theme: 'dark', dnt: true, conversation: 'none' })
-        .then(el=>{ if(!el) cell.remove(); }) // tweet was deleted/protected — drop the empty slot
-        .catch(()=>{ cell.remove(); });
+      window.twttr.widgets.createTweet(p.tweet_id, tweetHolder, { theme: 'dark', dnt: true, conversation: 'none' })
+        .then(el=>{
+          if(settled) return;
+          settled = true;
+          if(!el) pfpShowcaseFallback(tweetHolder, p); // tweet was deleted/protected
+        })
+        .catch(()=>{
+          if(settled) return;
+          settled = true;
+          pfpShowcaseFallback(tweetHolder, p);
+        });
+      setTimeout(()=>{
+        if(settled) return;
+        settled = true;
+        if(tweetHolder.offsetHeight < 100) pfpShowcaseFallback(tweetHolder, p);
+      }, 4000);
+    } else {
+      pfpShowcaseFallback(tweetHolder, p);
     }
   });
+}
+
+function pfpShowcaseFallback(container, p){
+  container.innerHTML = `
+    <div class="pfp-showcase-fallback">
+      <div class="pfp-showcase-fallback-name">${escHtml(p.display_name)}</div>
+      <a class="pfp-showcase-fallback-link" href="${escAttr(p.tweet_url)}" target="_blank" rel="noopener noreferrer">View post on X ↗</a>
+    </div>`;
 }
 
 async function deletePfpShowcasePost(id, cellEl){
