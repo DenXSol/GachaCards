@@ -648,7 +648,7 @@ nav button.active{color:var(--accent);background:var(--accent-dim);border:1px so
 .pfp-showcase-wall::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
 .pfp-showcase-empty{font-size:12px;color:var(--muted2);text-align:center;padding:20px 0;}
 .pfp-showcase-tweet{position:relative;border:1px solid var(--border2);border-radius:10px;padding:6px;min-height:60px;}
-.pfp-showcase-tweet-frame{display:block;width:100%;height:550px;border:none;border-radius:8px;}
+.pfp-showcase-tweet-frame{display:block;width:100%;height:750px;border:none;border-radius:8px;}
 .pfp-showcase-delete-btn{position:absolute;top:6px;right:6px;z-index:5;background:#ef5350;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;padding:4px 9px;cursor:pointer;opacity:0.92;}
 .pfp-showcase-delete-btn:hover{opacity:1;}
 .pfp-showcase-wall-title{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;}
@@ -3550,6 +3550,11 @@ async function renderPfpShowcase(posts){
     iframe.className = 'pfp-showcase-tweet-frame';
     iframe.src = 'https://platform.twitter.com/embed/Tweet.html?dnt=true&theme=dark&frame=false&hideCard=false&hideThread=false&lang=en&id=' + encodeURIComponent(p.tweet_id);
     iframe.loading = 'lazy';
+    // scrolling="no": tall boxed at 750px comfortably fits the vast majority of
+    // tweets, so we turn off each iframe's own scrollbar and rely on just the
+    // one outer wall scroll — a rare unusually-long tweet gets clipped at the
+    // bottom instead of adding a second nested scrollbar.
+    iframe.setAttribute('scrolling', 'no');
     iframe.onerror = ()=>pfpShowcaseFallback(tweetHolder, p);
     tweetHolder.appendChild(iframe);
   });
